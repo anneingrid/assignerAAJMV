@@ -7,7 +7,7 @@ import Documentos from './components/Documentos';
 function Dashboard() {
   return (
     <div>
-      <h2>Principal</h2>
+
       <GerarChaves />
       <Assinar />
       <Documentos />

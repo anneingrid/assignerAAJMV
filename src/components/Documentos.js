@@ -5,13 +5,12 @@ function Documentos() {
   const documents = [
     { id: 1, name: 'Documento 1', signed: true },
     { id: 2, name: 'Documento 2', signed: false },
-    // Mock de documentos
   ];
 
   return (
-    <Container style={styles.container}>
-      <Row>
-        <Col md={12} style={styles.documentosBox}>
+    <Container fluid style={styles.container}>
+      <Row className="justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <Col md={8} lg={6} style={styles.documentosBox}>
           <h3 style={styles.header}>Documentos Assinados</h3>
           <ListGroup style={styles.listGroup}>
             {documents.filter(doc => doc.signed).map((doc) => (
@@ -41,15 +40,17 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     height: '100vh',
-    backgroundColor: '#E3F2FD', // Fundo azul claro
+    backgroundColor: '#E3F2FD',
+    width: '100vw',
   },
   documentosBox: {
     backgroundColor: '#ffffff',
     padding: '40px',
     borderRadius: '12px',
     boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
-    maxWidth: '600px',
     textAlign: 'center',
+    width: '100%',
+    maxWidth: '600px',
   },
   header: {
     color: '#3282F6',
@@ -60,14 +61,14 @@ const styles = {
     width: '100%',
   },
   listItemSigned: {
-    backgroundColor: '#d4edda', // Verde claro
+    backgroundColor: '#d4edda',
     borderColor: '#c3e6cb',
     borderRadius: '8px',
     padding: '10px',
     marginBottom: '10px',
   },
   listItemNotSigned: {
-    backgroundColor: '#f8d7da', // Vermelho claro
+    backgroundColor: '#f8d7da',
     borderColor: '#f5c6cb',
     borderRadius: '8px',
     padding: '10px',

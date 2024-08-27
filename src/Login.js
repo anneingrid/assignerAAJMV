@@ -10,19 +10,26 @@ function Login({ setIsAuthenticated }) {
 
     const handleLogin = (e) => {
         e.preventDefault();
-        if (username === 'admin' && password === '1234') {
+        if (username && password) {
             setIsAuthenticated(true);
             navigate('/Principal');
         } else {
-            setError('Usuário ou senha incorretos!');
+            setError('Por favor, preencha todos os campos.');
         }
     };
 
+    const handleGoogleLogin = () => {
+        // Simulando a lógica de login com o Google
+        alert('Autenticado com sucesso pelo Google!');
+        setIsAuthenticated(true);
+        navigate('/Principal');
+    };
+
     return (
-        <Container style={styles.container}>
-            <Row className="justify-content-center">
+        <Container fluid style={styles.container}>
+            <Row className="justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
                 <Col md={12} style={styles.loginBox}>
-                    <h2 className="text-center mb-4" style={styles.title}>Login</h2>
+                    <h2 className="text-center mb-4" style={styles.title}>🔐 Bem-vindo ao Sistema</h2>
                     {error && <Alert variant="danger">{error}</Alert>}
                     <Form onSubmit={handleLogin}>
                         <Form.Group controlId="formBasicEmail">
@@ -54,13 +61,13 @@ function Login({ setIsAuthenticated }) {
                         </Button>
 
                         <div style={styles.googleLoginContainer}>
-                            <Button style={styles.googleButton}>
+                            <Button onClick={handleGoogleLogin} style={styles.googleButton}>
                                 <img
                                     src="https://ajuda.fastcommerce.com.br/lojas/00000009/prod/fc15025-configurar-login-cliente-google.jpg"
                                     alt="Google Login"
                                     style={styles.googleIcon}
                                 />
-                                Entrar com o Google
+                                <span style={styles.googleButtonText}>Entrar com o Google</span>
                             </Button>
                         </div>
                     </Form>
@@ -77,6 +84,7 @@ const styles = {
         alignItems: 'center',
         height: '100vh',
         backgroundColor: '#E3F2FD',
+        width: '100vw',
     },
     loginBox: {
         backgroundColor: '#ffffff',
@@ -88,6 +96,11 @@ const styles = {
     },
     title: {
         color: '#3282F6',
+        fontSize: '2.5rem',
+        fontWeight: 'bold',
+        fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
+        textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
+        marginBottom: '30px',
     },
     input: {
         borderRadius: '30px',
@@ -103,6 +116,7 @@ const styles = {
         padding: '10px',
         fontSize: '16px',
         border: 'none',
+        color: '#fff',
     },
     googleLoginContainer: {
         marginTop: '20px',
@@ -119,6 +133,12 @@ const styles = {
         justifyContent: 'center',
         fontSize: '16px',
         width: 'fit-content',
+        color: '#000',
+        cursor: 'pointer', 
+        transition: 'background-color 0.3s', 
+    },
+    googleButtonText: {
+        color: '#000', 
     },
     googleIcon: {
         width: '20px',
