@@ -72,7 +72,7 @@ const styles = {
     marginTop: '20px',
     color: '#fff',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    transition: 'background-color 0.3s, transform 0.3s', // Transição suave para hover
+    transition: 'background-color 0.3s, transform 0.3s', 
   },
 };
 

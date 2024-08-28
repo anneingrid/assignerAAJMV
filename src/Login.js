@@ -10,7 +10,7 @@ function Login({ setIsAuthenticated }) {
 
     const handleLogin = (e) => {
         e.preventDefault();
-        if (username && password) {
+        if (username.trim() !== '' && password.trim() !== '') {
             setIsAuthenticated(true);
             navigate('/Principal');
         } else {
@@ -19,7 +19,7 @@ function Login({ setIsAuthenticated }) {
     };
 
     const handleGoogleLogin = () => {
-        // Simulando a lógica de login com o Google
+        // Simulação de login com o Google
         alert('Autenticado com sucesso pelo Google!');
         setIsAuthenticated(true);
         navigate('/Principal');
@@ -39,7 +39,6 @@ function Login({ setIsAuthenticated }) {
                                 placeholder="Digite seu usuário"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                required
                                 style={styles.input}
                             />
                         </Form.Group>
@@ -51,7 +50,6 @@ function Login({ setIsAuthenticated }) {
                                 placeholder="Digite sua senha"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                required
                                 style={styles.input}
                             />
                         </Form.Group>
@@ -134,11 +132,11 @@ const styles = {
         fontSize: '16px',
         width: 'fit-content',
         color: '#000',
-        cursor: 'pointer', 
-        transition: 'background-color 0.3s', 
+        cursor: 'pointer',
+        transition: 'background-color 0.3s',
     },
     googleButtonText: {
-        color: '#000', 
+        color: '#000',
     },
     googleIcon: {
         width: '20px',
