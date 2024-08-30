@@ -7,7 +7,9 @@ function GerarChaves() {
   const navigate = useNavigate();
 
   const handleGerarChaves = () => {
-    alert('Chaves geradas com sucesso!');
+    const generatedHash = Math.random().toString(36).substr(2, 9); // Gera uma chave hash aleatória
+    localStorage.setItem('generatedHash', generatedHash); // Salva a chave gerada no localStorage
+    alert(`Chaves geradas com sucesso! Hash: ${generatedHash}`);
     navigate('/Assinar');
   };
 

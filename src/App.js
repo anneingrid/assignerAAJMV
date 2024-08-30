@@ -3,9 +3,9 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Login from './Login';
 import Cadastro from './Cadastro';
 import Principal from './Principal';
-import Documentos from './components/Documentos'; // Importe o componente Documentos
-import GerarChaves from './components/GerarChaves'; // Importe o componente GerarChaves
-import Assinar from './components/Assinar'; // Importe o componente Assinar
+import Documentos from './components/Documentos'; 
+import GerarChaves from './components/GerarChaves'; 
+import Assinar from './components/Assinar'; 
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -14,26 +14,32 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
+          {/* Rota para Login, redireciona para Principal se autenticado */}
           <Route
             path="/"
             element={isAuthenticated ? <Navigate to="/Principal" /> : <Login setIsAuthenticated={setIsAuthenticated} />}
           />
+          {/* Rota para Cadastro */}
           <Route path="/Cadastro" element={<Cadastro />} />
+          {/* Rota para Principal, redireciona para Login se não autenticado */}
           <Route
             path="/Principal"
             element={isAuthenticated ? <Principal /> : <Navigate to="/" />}
           />
+          {/* Rota para Documentos, redireciona para Login se não autenticado */}
           <Route
             path="/Documentos"
-            element={isAuthenticated ? <Documentos /> : <Navigate to="/" />}  // Rota para Documentos
+            element={isAuthenticated ? <Documentos /> : <Navigate to="/" />}
           />
+          {/* Rota para GerarChaves, redireciona para Login se não autenticado */}
           <Route
             path="/GerarChaves"
-            element={isAuthenticated ? <GerarChaves /> : <Navigate to="/" />}  // Rota para GerarChaves
+            element={isAuthenticated ? <GerarChaves /> : <Navigate to="/" />}
           />
+          {/* Rota para Assinar, redireciona para Login se não autenticado */}
           <Route
             path="/Assinar"
-            element={isAuthenticated ? <Assinar /> : <Navigate to="/" />}  // Rota para Assinar
+            element={isAuthenticated ? <Assinar /> : <Navigate to="/" />}
           />
         </Routes>
       </div>

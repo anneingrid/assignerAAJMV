@@ -18,11 +18,8 @@ function Login({ setIsAuthenticated }) {
         }
     };
 
-    const handleGoogleLogin = () => {
-        // Simulação de login com o Google
-        alert('Autenticado com sucesso pelo Google!');
-        setIsAuthenticated(true);
-        navigate('/Principal');
+    const handleRegister = () => {
+        navigate('/Cadastro'); // Redireciona para a página de cadastro
     };
 
     return (
@@ -33,10 +30,10 @@ function Login({ setIsAuthenticated }) {
                     {error && <Alert variant="danger">{error}</Alert>}
                     <Form onSubmit={handleLogin}>
                         <Form.Group controlId="formBasicEmail">
-                            <Form.Label className="text-start">Usuário</Form.Label>
+                            <Form.Label className="text-start">Email</Form.Label>
                             <Form.Control
                                 type="text"
-                                placeholder="Digite seu usuário"
+                                placeholder="Digite seu Email"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 style={styles.input}
@@ -57,18 +54,13 @@ function Login({ setIsAuthenticated }) {
                         <Button type="submit" style={styles.submitButton}>
                             Entrar
                         </Button>
-
-                        <div style={styles.googleLoginContainer}>
-                            <Button onClick={handleGoogleLogin} style={styles.googleButton}>
-                                <img
-                                    src="https://ajuda.fastcommerce.com.br/lojas/00000009/prod/fc15025-configurar-login-cliente-google.jpg"
-                                    alt="Google Login"
-                                    style={styles.googleIcon}
-                                />
-                                <span style={styles.googleButtonText}>Entrar com o Google</span>
-                            </Button>
-                        </div>
                     </Form>
+
+                    {/* Adicionando o link para a página de cadastro */}
+                    <div style={styles.registerContainer}>
+                        <span>Não tem uma conta? </span>
+                        <a href="/Cadastro" style={styles.registerLink}>Registre-se</a>
+                    </div>
                 </Col>
             </Row>
         </Container>
@@ -116,31 +108,14 @@ const styles = {
         border: 'none',
         color: '#fff',
     },
-    googleLoginContainer: {
+    registerContainer: {
         marginTop: '20px',
-        display: 'flex',
-        justifyContent: 'center',
+        fontSize: '0.9rem',
     },
-    googleButton: {
-        backgroundColor: '#ffffff',
-        borderColor: '#ddd',
-        borderRadius: '30px',
-        padding: '10px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '16px',
-        width: 'fit-content',
-        color: '#000',
-        cursor: 'pointer',
-        transition: 'background-color 0.3s',
-    },
-    googleButtonText: {
-        color: '#000',
-    },
-    googleIcon: {
-        width: '20px',
-        marginRight: '10px',
+    registerLink: {
+        color: '#55a6ed',
+        textDecoration: 'none',
+        fontWeight: 'bold',
     },
 };
 
