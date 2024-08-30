@@ -35,11 +35,11 @@ function GerarChaves() {
 const styles = {
   container: {
     backgroundColor: '#E3F2FD',
-    width: '100vw',
-    height: '100vh',
+    // width: '100vw',
+    // height: '100vh',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
+    // alignItems: 'center',
   },
   gerarChavesBox: {
     backgroundColor: '#ffffff',

@@ -1,23 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Modal from './Modal';
+import { AppContext } from '../Provider';
 
 function Assinar() {
-  const [documentText, setDocumentText] = useState('');
+  const { gerarAssinatura } = useContext(AppContext);
+  const [textoDocumento, setTextoDocumento] = useState('');
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignDocument = () => {
-    alert(`Documento assinado com sucesso!\nTexto do documento: ${documentText}`);
+  const assinarDocumento = () => {
+    alert(`Documento assinado com sucesso!\nTexto do documento: ${textoDocumento}`);
+    gerarAssinatura(0, 1, textoDocumento);
+     
     navigate('/Documentos');
   };
 
-  const handleViewDocument = () => {
+  const visualizarDocumento = () => {
     setShowModal(true);
   };
 
-  const handleCloseModal = () => {
+  const fecharModal = () => {
     setShowModal(false);
   };
 
@@ -31,30 +35,30 @@ function Assinar() {
         <Col md={6} lg={4} style={styles.assinarBox}>
           <h3 style={styles.header}>Assinar Documento</h3>
           <Form>
-            <Form.Group controlId="documentText" style={styles.formGroup}>
+            <Form.Group controlId="textoDocumento" style={styles.formGroup}>
               <Form.Control
                 as="textarea"
                 rows={6}
                 placeholder="Digite o texto do documento aqui"
-                value={documentText}
-                onChange={(e) => setDocumentText(e.target.value)}
+                value={textoDocumento}
+                onChange={(e) => setTextoDocumento(e.target.value)}
                 style={styles.textArea}
               />
             </Form.Group>
             <div style={styles.buttonGroup}>
               <Button
                 variant="secondary"
-                onClick={handleViewDocument}
+                onClick={visualizarDocumento}
                 style={styles.viewButton}
               >
-                Visualizar Documento
+                Salvar
               </Button>
               <Button
                 variant="primary"
-                onClick={handleSignDocument}
+                onClick={assinarDocumento}
                 style={styles.signButton}
               >
-                Assinar Documento
+                Assinar
               </Button>
             </div>
           </Form>
@@ -63,8 +67,8 @@ function Assinar() {
 
       <Modal
         show={showModal}
-        onClose={handleCloseModal}
-        documentText={documentText}
+        onClose={fecharModal}
+        textoDocumento={textoDocumento}
         navigateToDocuments={navigateToDocuments}
       />
     </Container>
@@ -75,7 +79,7 @@ const styles = {
   container: {
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
+    // alignItems: 'center',
     height: '100vh',
     backgroundColor: '#E3F2FD',
     width: '100vw',
@@ -115,6 +119,7 @@ const styles = {
     fontSize: '16px',
     border: 'none',
     margin: '0 5px',
+    width: 150
   },
   signButton: {
     backgroundColor: '#81D4FA',
@@ -123,6 +128,7 @@ const styles = {
     fontSize: '16px',
     border: 'none',
     margin: '0 5px',
+    width: 150
   },
 };
 

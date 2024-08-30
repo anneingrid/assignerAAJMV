@@ -18,9 +18,18 @@ function Login({ setIsAuthenticated }) {
         }
     };
 
+<<<<<<< Updated upstream
     const handleRegister = () => {
         navigate('/Cadastro'); // Redireciona para a página de cadastro
     };
+=======
+    // const handleGoogleLogin = () => {
+    //     // Simulação de login com o Google
+    //     alert('Autenticado com sucesso pelo Google!');
+    //     setIsAuthenticated(true);
+    //     navigate('/Principal');
+    // };
+>>>>>>> Stashed changes
 
     return (
         <Container fluid style={styles.container}>
@@ -54,6 +63,20 @@ function Login({ setIsAuthenticated }) {
                         <Button type="submit" style={styles.submitButton}>
                             Entrar
                         </Button>
+<<<<<<< Updated upstream
+=======
+
+                        {/*<div style={styles.googleLoginContainer}> 
+                        //<Button onClick={handleGoogleLogin} style={styles.googleButton}>
+                                <img
+                                    src="https://ajuda.fastcommerce.com.br/lojas/00000009/prod/fc15025-configurar-login-cliente-google.jpg"
+                                    alt="Google Login"
+                                    style={styles.googleIcon}
+                                />
+                                <span style={styles.googleButtonText}>Entrar com o Google</span>
+                            </Button>
+                        </div>*/}
+>>>>>>> Stashed changes
                     </Form>
 
                     {/* Adicionando o link para a página de cadastro */}
