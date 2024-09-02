@@ -1,5 +1,6 @@
 import React, { createContext, useState } from 'react';
 import { supabase } from './ConexaoBd';
+
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
@@ -42,9 +43,103 @@ export const AppProvider = ({ children }) => {
         }
     }
 
+    async function gerarChaves(idUsuario) {
+        try {
+            const keyPair = await window.crypto.subtle.generateKey(
+                {
+                    name: "RSA-PSS",
+                    modulusLength: 2048,
+                    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+                    hash: "SHA-256",
+                },
+                true,
+                ["sign", "verify"]
+            );
+
+            const publicKey = await window.crypto.subtle.exportKey(
+                "spki",
+                keyPair.publicKey
+            );
+            const privateKey = await window.crypto.subtle.exportKey(
+                "pkcs8",
+                keyPair.privateKey
+            );
+
+            const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
+            const privateKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(privateKey)));
+
+            const { data, error } = await supabase
+                .from('usuarios')
+                .update([
+                    {
+                        chave_publica: publicKeyBase64,
+                        chave_privada: privateKeyBase64,
+                    }])
+                .match({ id_usuario: idUsuario });
+
+            if (error) {
+                console.error('Erro ao armazenar as chaves:', error.message || error);
+                return null;
+            }
+
+            console.log('Par de chaves gerado e armazenado com sucesso:', data);
+
+            const { data: dadosPrimeiraChamada, error: erroPrimeiraChamada } = await supabase
+                .from('usuarios')
+                .select()
+            console.log(dadosPrimeiraChamada)
+
+            return data;
+        } catch (error) {
+            console.error('Erro ao gerar o par de chaves:', error.message || error);
+            return null;
+        }
+    }
+
+    async function listarDocumentosAssinados(idUsuario) {
+        try {
+            const { data, error } = await supabase
+                .from('documentos')
+                .select()
+                .eq('id_usuario', idUsuario)
+                .neq('documento_hash', null); 
+    
+            if (error) {
+                console.error('Erro ao buscar documentos assinados:', error.message || error);
+                return null;
+            }
+
+            console.log(data);
+            return data; 
+
+        } catch (error) {
+            console.error('Erro ao listar documentos assinados:', error.message || error);
+            return null;
+        }
+    }
+    
+    async function listarDocumentosNaoAssinados(idUsuario) {
+        try {
+            const { data, error } = await supabase
+                .from('documentos')
+                .select()
+                .eq('id_usuario', idUsuario)
+                .eq('documento_hash', null); 
+    
+            if (error) {
+                console.error('Erro ao buscar documentos não assinados:', error.message || error);
+                return null;
+            }
+            console.log(data);
+            return data; 
+        } catch (error) {
+            console.error('Erro ao listar documentos não assinados:', error.message || error);
+            return null;
+        }
+    }
 
     return (
-        <AppContext.Provider value={{ gerarHash, gerarAssinatura }}>
+        <AppContext.Provider value={{ gerarHash, gerarAssinatura, gerarChaves, listarDocumentosAssinados, listarDocumentosNaoAssinados }}>
             {children}
         </AppContext.Provider>
     );
