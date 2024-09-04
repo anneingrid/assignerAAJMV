@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { useState, useContext } from 'react';
 import { Button, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FaKey } from 'react-icons/fa'; // Ícone para um toque visual
+import { FaKey } from 'react-icons/fa'; 
+import { AppContext } from '../Provider';
 
 function GerarChaves() {
   const navigate = useNavigate();
+  const { gerarChaves } = useContext(AppContext);
 
   const handleGerarChaves = () => {
-    const generatedHash = Math.random().toString(36).substr(2, 9); // Gera uma chave hash aleatória
-    localStorage.setItem('generatedHash', generatedHash); // Salva a chave gerada no localStorage
-    alert(`Chaves geradas com sucesso! Hash: ${generatedHash}`);
-    navigate('/Assinar');
+    const idUsuario = 2; // Trocar o numero 2 pelo id do usuario logado no sistema
+    gerarChaves(idUsuario); 
   };
 
   return (

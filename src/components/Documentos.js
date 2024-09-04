@@ -1,7 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Container, Row, Col, ListGroup, Card } from 'react-bootstrap';
+import { AppContext } from '../Provider';
 
 function Documentos() {
+  const { listarDocumentosAssinados, listarDocumentosNaoAssinados } = useContext(AppContext);
+  const [documentosAssinados, setDocumentosAssinados] = useState();
+  const [documentosNaoAssinados, setDocumentosNaoAssinados] = useState();
+
+  const buscarDocumentos = async () => {
+    try {
+      const idUsuario = 1; // Trocar o numero 1 pelo id do usuario logado no sistema
+
+      const documentosAssinados = await listarDocumentosAssinados(idUsuario);
+      const documentosNaoAssinados = await listarDocumentosNaoAssinados(idUsuario);
+
+      setDocumentosAssinados(documentosAssinados);
+      setDocumentosNaoAssinados(documentosNaoAssinados);
+
+    } catch (error) {
+      console.error("Erro ao buscar os documentos:", error);
+    }
+  };
+
   const documents = [
     { id: 1, name: 'Documento 1', signed: true },
     { id: 2, name: 'Documento 2', signed: false },
@@ -10,6 +30,10 @@ function Documentos() {
   const currentDate = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const currentUser = "Usuário Exemplo"; // Substitua pelo nome real do usuário logado, se disponível
   const generatedHash = localStorage.getItem('generatedHash') || 'Chave não gerada'; // Obtém a chave gerada do localStorage
+
+  useEffect(() => {
+    buscarDocumentos();
+  }, []);
 
   return (
     <Container fluid style={styles.container}>

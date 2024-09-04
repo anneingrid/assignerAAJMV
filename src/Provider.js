@@ -82,14 +82,8 @@ export const AppProvider = ({ children }) => {
                 return null;
             }
 
-            console.log('Par de chaves gerado e armazenado com sucesso:', data);
-
-            const { data: dadosPrimeiraChamada, error: erroPrimeiraChamada } = await supabase
-                .from('usuarios')
-                .select()
-            console.log(dadosPrimeiraChamada)
-
             return data;
+
         } catch (error) {
             console.error('Erro ao gerar o par de chaves:', error.message || error);
             return null;
@@ -99,39 +93,51 @@ export const AppProvider = ({ children }) => {
     async function listarDocumentosAssinados(idUsuario) {
         try {
             const { data, error } = await supabase
-                .from('documentos')
-                .select()
+                .from('assinaturas')
+                .select(`
+                id_documento,
+                documentos (*)`)
                 .eq('id_usuario', idUsuario)
-                .neq('documento_hash', null); 
-    
             if (error) {
-                console.error('Erro ao buscar documentos assinados:', error.message || error);
-                return null;
+                console.error("Erro ao buscar documentos assinados:", error)
+                return []
             }
-
-            console.log(data);
-            return data; 
+            return data;
 
         } catch (error) {
             console.error('Erro ao listar documentos assinados:', error.message || error);
             return null;
         }
     }
-    
+
     async function listarDocumentosNaoAssinados(idUsuario) {
         try {
-            const { data, error } = await supabase
-                .from('documentos')
-                .select()
-                .eq('id_usuario', idUsuario)
-                .eq('documento_hash', null); 
-    
-            if (error) {
-                console.error('Erro ao buscar documentos não assinados:', error.message || error);
-                return null;
-            }
-            console.log(data);
-            return data; 
+            const { data: documentos, error: erroDocumentos } = await supabase
+            .from('documentos')
+            .select('*')
+            .eq('id_usuario', idUsuario);
+
+          if (erroDocumentos) {
+            console.error("Erro ao buscar documentos:", erroDocumentos);
+            return [];
+          }
+        
+          const { data: assinaturas, error: erroAssinaturas} = await supabase
+            .from('assinaturas')
+            .select('*')
+            .eq('id_usuario', idUsuario);
+        
+          if (erroAssinaturas) {
+            console.error("Erro ao buscar assinaturas:", erroAssinaturas);
+            return [];
+          }
+
+          const idDocumentoAssinaturas = assinaturas.map(doc => doc.id_documento);
+        
+          const documentosNaoAssinados = documentos.filter(doc => !idDocumentoAssinaturas.includes(doc.id_documento));
+        
+          return documentosNaoAssinados;
+
         } catch (error) {
             console.error('Erro ao listar documentos não assinados:', error.message || error);
             return null;
