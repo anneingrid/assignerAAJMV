@@ -1,27 +1,49 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import bcrypt from 'bcryptjs';  // Importa o bcryptjs
+import { supabase } from './ConexaoBd';
 
 function Login({ setIsAuthenticated }) {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (username.trim() !== '' && password.trim() !== '') {
-            setIsAuthenticated(true);
-            navigate('/Principal');
+        setError('');
+
+        if (email.trim() !== '' && password.trim() !== '') {
+            try {
+                const { data: usuario, error: fetchError } = await supabase
+                    .from('usuarios')
+                    .select('id_usuario, nome_usuario, senha')
+                    .eq('email', email)
+                    .single();
+
+                if (fetchError || !usuario) {
+                    setError('Usuário não encontrado.');
+                    return;
+                }
+
+                const isPasswordCorrect = bcrypt.compareSync(password, usuario.senha);
+
+                if (!isPasswordCorrect) {
+                    setError('Senha incorreta.');
+                    return;
+                }
+
+                setIsAuthenticated(true);
+                navigate('/Principal');
+            } catch (error) {
+                console.error('Erro durante o login:', error);
+                setError('Erro durante o login. Tente novamente.');
+            }
         } else {
             setError('Por favor, preencha todos os campos.');
         }
     };
-
-    const handleRegister = () => {
-        navigate('/Cadastro'); // Redireciona para a página de cadastro
-    };
-
 
     return (
         <Container fluid style={styles.container}>
@@ -35,8 +57,8 @@ function Login({ setIsAuthenticated }) {
                             <Form.Control
                                 type="text"
                                 placeholder="Digite seu Email"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 style={styles.input}
                             />
                         </Form.Group>
@@ -57,10 +79,9 @@ function Login({ setIsAuthenticated }) {
                         </Button>
                     </Form>
 
-                    {/* Adicionando o link para a página de cadastro */}
                     <div style={styles.registerContainer}>
                         <span>Não tem uma conta? </span>
-                        <a href="/Cadastro" style={styles.registerLink}>Registre-se</a>
+                        <Link to="/Cadastro" style={styles.registerLink}>Registre-se</Link>
                     </div>
                 </Col>
             </Row>
@@ -108,15 +129,6 @@ const styles = {
         fontSize: '16px',
         border: 'none',
         color: '#fff',
-    },
-    registerContainer: {
-        marginTop: '20px',
-        fontSize: '0.9rem',
-    },
-    registerLink: {
-        color: '#55a6ed',
-        textDecoration: 'none',
-        fontWeight: 'bold',
     },
 };
 
