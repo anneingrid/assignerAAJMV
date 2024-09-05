@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../Provider';
 import { FaDownload, FaEye } from 'react-icons/fa';
+import Assinar from './Assinar';
+import { Button } from 'react-bootstrap';
 
 function Documentos() {
   const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados } = useContext(AppContext);
@@ -19,7 +21,7 @@ function Documentos() {
 
       fetchDocumentos();
     }
-  }, [usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados]);
+  }, [usuarioLogado, documentosAssinados, documentosNaoAssinados]);
 
   const handleDownload = (documento) => {
     console.log(`Baixando o documento: ${documento.documentos.mensagem_documento}`);
@@ -31,6 +33,7 @@ function Documentos() {
 
   return (
     <div style={styles.container}>
+      <Assinar></Assinar>
       <h2 style={styles.title}>Documentos Assinados</h2>
       {documentosAssinados.length > 0 ? (
         <div style={styles.tableContainer}>
@@ -38,7 +41,7 @@ function Documentos() {
             <thead>
               <tr>
                 <th>Nome do Documento</th>
-                <th>Data</th>
+                <th>Assinado em</th>
                 <th>Status</th>
                 <th>Ações</th>
               </tr>
@@ -47,17 +50,18 @@ function Documentos() {
               {documentosAssinados.map((documento) => (
                 <tr key={documento.id_documento} style={styles.tableRow}>
                   <td>{documento.documentos.mensagem_documento}</td>
-                  <td>{new Date(documento.documentos.criado_em).toLocaleDateString()}</td>
+                  <td>{new Date(documento.assinado_em).toLocaleString()}</td>
+
                   <td>
-                    <span style={{ ...styles.status, backgroundColor: '#2ecc71' }}>Assinado</span>
+                    <span style={{ ...styles.status, backgroundColor: '#A5D6A7' }}>Assinado</span>
                   </td>
                   <td>
-                    <button style={styles.actionButton} onClick={() => handleView(documento)}>
+                    <Button style={styles.actionButton} onClick={() => handleView(documento)}>
                       <FaEye style={styles.icon} /> Visualizar
-                    </button>
-                    <button style={styles.actionButton} onClick={() => handleDownload(documento)}>
-                      <FaDownload style={styles.icon} /> Baixar
-                    </button>
+                    </Button>
+                    <Button style={styles.actionButton} onClick={() => handleDownload(documento)}>
+                      <FaDownload style={styles.icon} /> Verificar Assinatura
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -75,7 +79,7 @@ function Documentos() {
             <thead>
               <tr>
                 <th>Nome do Documento</th>
-                <th>Data</th>
+                <th>Data de criação</th>
                 <th>Status</th>
                 <th>Ações</th>
               </tr>
@@ -84,17 +88,17 @@ function Documentos() {
               {documentosNaoAssinados.map((documento) => (
                 <tr key={documento.id_documento} style={styles.tableRow}>
                   <td>{documento.mensagem_documento}</td>
-                  <td>{new Date(documento.criado_em).toLocaleDateString()}</td>
+                  <td>{new Date(documento.criado_em).toLocaleString()}</td>
                   <td>
                     <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
                   </td>
-                  <td>
-                    <button style={styles.actionButton} onClick={() => handleView(documento)}>
+                  <td style={{alignItems:'center'}}>
+                    <Button style={styles.actionButton} onClick={() => handleView(documento)}>
                       <FaEye style={styles.icon} /> Visualizar
-                    </button>
-                    <button style={styles.actionButton} onClick={() => handleDownload(documento)}>
-                      <FaDownload style={styles.icon} /> Baixar
-                    </button>
+                    </Button>
+                    <Button style={styles.actionButton} onClick={() => handleDownload(documento)}>
+                      <FaDownload style={styles.icon} /> Assinar
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -154,23 +158,21 @@ const styles = {
     color: '#34495e',
   },
   status: {
-    padding: '6px 12px',
+    padding: '4px 8px',
     borderRadius: '12px',
     color: '#fff',
-    fontWeight: 'bold',
+    fontSize: '14px',
+    alignItems: 'center'
   },
   actionButton: {
-    marginRight: '10px',
-    padding: '8px 16px',
-    backgroundColor: '#2980b9',
-    color: '#fff',
+    backgroundColor: '#81D4FA',
+    borderRadius: '20px',
+    padding: '5px 10px',
+    fontSize: '14px',
     border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    display: 'inline-flex',
-    alignItems: 'center',
-    transition: 'background-color 0.3s ease',
-    fontWeight: 'bold',
+    margin: '0 5px',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   icon: {
     marginRight: '8px',

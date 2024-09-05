@@ -1,16 +1,19 @@
 import React, { useState, useContext } from 'react';
 import { Button, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FaKey } from 'react-icons/fa'; 
+import { FaKey } from 'react-icons/fa';
 import { AppContext } from '../Provider';
 
 function GerarChaves() {
   const navigate = useNavigate();
-  const { gerarChaves } = useContext(AppContext);
+  const { gerarChaves, usuarioLogado } = useContext(AppContext);
+  const [isDisabled, setIsDisabled] = useState(true);
 
   const handleGerarChaves = () => {
-    const idUsuario = 2; // Trocar o numero 2 pelo id do usuario logado no sistema
-    gerarChaves(idUsuario); 
+
+    gerarChaves(usuarioLogado.id_usuario);
+    alert(`Chaves Geradad com sucesso!`);
+    setIsDisabled(true);
   };
 
   return (
@@ -23,6 +26,7 @@ function GerarChaves() {
             onClick={handleGerarChaves}
             variant="primary"
             style={styles.gerarButton}
+            disabled={isDisabled}
           >
             Gerar
           </Button>
@@ -74,7 +78,7 @@ const styles = {
     marginTop: '20px',
     color: '#fff',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    transition: 'background-color 0.3s, transform 0.3s', 
+    transition: 'background-color 0.3s, transform 0.3s',
   },
 };
 

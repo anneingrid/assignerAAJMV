@@ -164,7 +164,7 @@ export const AppProvider = ({ children }) => {
         try {
             const { data, error } = await supabase
                 .from('assinaturas')
-                .select(`id_documento, documentos (*)`)
+                .select(`*, documentos (*)`)
                 .eq('id_usuario', idUsuario);
             if (error) {
                 console.error("Erro ao buscar documentos assinados:", error);
