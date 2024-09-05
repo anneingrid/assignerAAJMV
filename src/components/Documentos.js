@@ -174,6 +174,7 @@ const styles = {
   },
   tableRow: {
     borderBottom: '1px solid #bdc3c7',
+    marginBottom: '40px'
   },
 
   th: {

@@ -14,7 +14,7 @@ function Assinar() {
   const [documentoSalvo, setDocumentoSalvo] = useState(false); 
   const navigate = useNavigate();
   const [id_documento, setId_documento] = useState('');
-  const [donoDocumento, setDonoDocumento] = useState(''); // Novo estado para capturar o dono do documento
+  const [donoDocumento, setDonoDocumento] = useState(''); 
 
   const assinarDocumento = () => {
     if (textoDocumento.trim() === '') {
@@ -36,7 +36,7 @@ function Assinar() {
 
       if (idDocumento) {
         setId_documento(idDocumento);
-        setDonoDocumento(usuarioLogado.nome || usuarioLogado.id_usuario); 
+        setDonoDocumento(usuarioLogado.nome_usuario   || usuarioLogado.id_usuario); 
         setDocumentoSalvo(true);
         setIsDisabled(true);
         setIsTextAreaDisabled(true);
