@@ -1,132 +1,188 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { Container, Row, Col, ListGroup, Card } from 'react-bootstrap';
+import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../Provider';
+import { FaDownload, FaEye } from 'react-icons/fa';
 
 function Documentos() {
-  const { listarDocumentosAssinados, listarDocumentosNaoAssinados } = useContext(AppContext);
-  const [documentosAssinados, setDocumentosAssinados] = useState();
-  const [documentosNaoAssinados, setDocumentosNaoAssinados] = useState();
-
-  const buscarDocumentos = async () => {
-    try {
-      const idUsuario = 1; // Trocar o numero 1 pelo id do usuario logado no sistema
-
-      const documentosAssinados = await listarDocumentosAssinados(idUsuario);
-      const documentosNaoAssinados = await listarDocumentosNaoAssinados(idUsuario);
-
-      setDocumentosAssinados(documentosAssinados);
-      setDocumentosNaoAssinados(documentosNaoAssinados);
-
-    } catch (error) {
-      console.error("Erro ao buscar os documentos:", error);
-    }
-  };
-
-  const documents = [
-    { id: 1, name: 'Documento 1', signed: true },
-    { id: 2, name: 'Documento 2', signed: false },
-  ];
-
-  const currentDate = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const currentUser = "Usuário Exemplo"; // Substitua pelo nome real do usuário logado, se disponível
-  const generatedHash = localStorage.getItem('generatedHash') || 'Chave não gerada'; // Obtém a chave gerada do localStorage
+  const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados } = useContext(AppContext);
+  const [documentosAssinados, setDocumentosAssinados] = useState([]);
+  const [documentosNaoAssinados, setDocumentosNaoAssinados] = useState([]);
 
   useEffect(() => {
-    buscarDocumentos();
-  }, []);
+    if (usuarioLogado) {
+      async function fetchDocumentos() {
+        const assinados = await listarDocumentosAssinados(usuarioLogado.id_usuario);
+        const naoAssinados = await listarDocumentosNaoAssinados(usuarioLogado.id_usuario);
+
+        setDocumentosAssinados(assinados);
+        setDocumentosNaoAssinados(naoAssinados);
+      }
+
+      fetchDocumentos();
+    }
+  }, [usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados]);
+
+  const handleDownload = (documento) => {
+    console.log(`Baixando o documento: ${documento.documentos.mensagem_documento}`);
+  };
+
+  const handleView = (documento) => {
+    console.log(`Visualizando o documento: ${documento.documentos.mensagem_documento}`);
+  };
 
   return (
-    <Container fluid style={styles.container}>
-      <Row className="justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <Col md={8} lg={6} style={styles.documentosBox}>
-          <Card style={styles.card}>
-            <Card.Body>
-              <Card.Title style={styles.mainHeader}>Lista de Documentos</Card.Title>
-              <Card.Text style={styles.infoText}><strong>Chave Gerada (Hash):</strong> {generatedHash}</Card.Text>
-              <Card.Text style={styles.infoText}><strong>Usuário Logado:</strong> {currentUser}</Card.Text>
-              <Card.Text style={styles.infoText}><strong>Data:</strong> {currentDate}</Card.Text>
-            </Card.Body>
-          </Card>
+    <div style={styles.container}>
+      <h2 style={styles.title}>Documentos Assinados</h2>
+      {documentosAssinados.length > 0 ? (
+        <div style={styles.tableContainer}>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th>Nome do Documento</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {documentosAssinados.map((documento) => (
+                <tr key={documento.id_documento} style={styles.tableRow}>
+                  <td>{documento.documentos.mensagem_documento}</td>
+                  <td>{new Date(documento.documentos.criado_em).toLocaleDateString()}</td>
+                  <td>
+                    <span style={{ ...styles.status, backgroundColor: '#2ecc71' }}>Assinado</span>
+                  </td>
+                  <td>
+                    <button style={styles.actionButton} onClick={() => handleView(documento)}>
+                      <FaEye style={styles.icon} /> Visualizar
+                    </button>
+                    <button style={styles.actionButton} onClick={() => handleDownload(documento)}>
+                      <FaDownload style={styles.icon} /> Baixar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p style={styles.emptyMessage}>Nenhum documento assinado encontrado.</p>
+      )}
 
-          {/* Lista de Documentos Assinados */}
-          <h4 style={styles.header}>Documentos Assinados</h4>
-          <ListGroup variant="flush" style={styles.listGroup}>
-            {documents.filter(doc => doc.signed).map((doc) => (
-              <ListGroup.Item key={doc.id} style={styles.listItemSigned}>
-                {doc.name}
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-
-          {/* Lista de Documentos Não Assinados */}
-          <h4 style={{ ...styles.header, marginTop: '30px' }}>Documentos Não Assinados</h4>
-          <ListGroup variant="flush" style={styles.listGroup}>
-            {documents.filter(doc => !doc.signed).map((doc) => (
-              <ListGroup.Item key={doc.id} style={styles.listItemNotSigned}>
-                {doc.name}
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        </Col>
-      </Row>
-    </Container>
+      <h2 style={styles.title}>Documentos Não Assinados</h2>
+      {documentosNaoAssinados.length > 0 ? (
+        <div style={styles.tableContainer}>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th>Nome do Documento</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {documentosNaoAssinados.map((documento) => (
+                <tr key={documento.id_documento} style={styles.tableRow}>
+                  <td>{documento.mensagem_documento}</td>
+                  <td>{new Date(documento.criado_em).toLocaleDateString()}</td>
+                  <td>
+                    <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
+                  </td>
+                  <td>
+                    <button style={styles.actionButton} onClick={() => handleView(documento)}>
+                      <FaEye style={styles.icon} /> Visualizar
+                    </button>
+                    <button style={styles.actionButton} onClick={() => handleDownload(documento)}>
+                      <FaDownload style={styles.icon} /> Baixar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p style={styles.emptyMessage}>Nenhum documento não assinado encontrado.</p>
+      )}
+    </div>
   );
 }
 
 const styles = {
   container: {
-    display: 'flex',
-    justifyContent: 'center',
-    // alignItems: 'center',
-    height: '100vh',
-    backgroundColor: '#E3F2FD',
-    width: '100vw',
-    padding: '20px', // Adicionado padding para um melhor espaçamento
+    padding: '30px',
+    backgroundColor: 'white',
+    borderRadius: '10px',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+    margin: '20px',
+    marginLeft: '270px',
+    minHeight: '100vh',
+    fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
   },
-  documentosBox: {
-    backgroundColor: '#ffffff',
-    padding: '20px',
-    borderRadius: '12px',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+  tableContainer: {
+    overflowX: 'auto',
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+    marginBottom: '40px',
+  },
+  title: {
+    fontSize: '1.8rem',
+    marginBottom: '20px',
+    color: '#2c3e50',
+    borderBottom: '2px solid #3498db',
+    paddingBottom: '10px',
+  },
+  table: {
     width: '100%',
-    maxWidth: '600px',
+    borderCollapse: 'collapse',
+    backgroundColor: 'transparent',
   },
-  card: {
-    marginBottom: '30px', // Margem inferior para separar o card da lista
+  tableRow: {
+    borderBottom: '1px solid #bdc3c7',
   },
-  mainHeader: {
-    color: '#3282F6',
-    fontSize: '1.75rem',
-    marginBottom: '15px',
+  th: {
+    padding: '12px',
+    backgroundColor: '#3498db',
+    color: '#fff',
+    textAlign: 'left',
   },
-  header: {
-    color: '#3282F6',
-    fontSize: '1.25rem',
-    marginBottom: '15px',
-  },
-  infoText: {
+  td: {
+    padding: '12px',
+    textAlign: 'left',
     fontSize: '1rem',
-    color: '#333',
-    marginBottom: '10px',
+    color: '#34495e',
   },
-  listGroup: {
-    width: '100%',
+  status: {
+    padding: '6px 12px',
+    borderRadius: '12px',
+    color: '#fff',
+    fontWeight: 'bold',
   },
-  listItemSigned: {
-    backgroundColor: '#d4edda',
-    borderColor: '#c3e6cb',
-    borderRadius: '8px',
-    padding: '10px',
-    marginBottom: '10px',
-    textAlign: 'left',
+  actionButton: {
+    marginRight: '10px',
+    padding: '8px 16px',
+    backgroundColor: '#2980b9',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    transition: 'background-color 0.3s ease',
+    fontWeight: 'bold',
   },
-  listItemNotSigned: {
-    backgroundColor: '#f8d7da',
-    borderColor: '#f5c6cb',
-    borderRadius: '8px',
-    padding: '10px',
-    marginBottom: '10px',
-    textAlign: 'left',
+  icon: {
+    marginRight: '8px',
+  },
+  actionButtonHover: {
+    backgroundColor: '#3498db',
+  },
+  emptyMessage: {
+    color: '#7f8c8d',
+    fontSize: '1.2rem',
+    textAlign: 'center',
+    marginTop: '20px',
   },
 };
 

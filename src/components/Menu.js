@@ -1,16 +1,10 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../Provider';
-import Navbar from './Navbar';
-import { FaHome, FaFileAlt, FaSignOutAlt } from 'react-icons/fa';
+import { FaHome, FaFileAlt, FaSignOutAlt, FaKey, FaSignature } from 'react-icons/fa'; 
 
-function Menu() {
-  const [showDocuments, setShowDocuments] = useState(false);
+function Menu({ setActiveScreen }) {
   const { usuarioLogado } = useContext(AppContext);
-
-  const toggleDocuments = () => {
-    setShowDocuments(!showDocuments);
-  };
-
+  
   const getFirstAndLastName = (nomeCompleto) => {
     const nomeArray = nomeCompleto.split(' ');
     if (nomeArray.length > 1) {
@@ -20,37 +14,34 @@ function Menu() {
   };
 
   return (
-    <div style={styles.dashboardContainer}>
-      <Navbar />
+    <div style={styles.sidebar}>
+      <ul style={styles.sidebarList}>
+        <li style={styles.sidebarItem} onClick={() => setActiveScreen('GerarChaves')}>
+          <a href="#gerar-chaves" style={styles.sidebarLink}>
+            <FaKey style={styles.icon} /> Gerar Chaves
+          </a>
+        </li>
+        <li style={styles.sidebarItem} onClick={() => setActiveScreen('Assinar')}>
+          <a href="#assinar" style={styles.sidebarLink}>
+            <FaSignature style={styles.icon} /> Assinar
+          </a>
+        </li>
+        <li style={styles.sidebarItem} onClick={() => setActiveScreen('Documentos')}>
+          <a href="#documentos" style={styles.sidebarLink}>
+            <FaFileAlt style={styles.icon} /> Documentos
+          </a>
+        </li>
 
-      <div style={styles.sidebar}>
-        <ul style={styles.sidebarList}>
-          <li style={styles.sidebarItem}>
-            <a href="#home" style={styles.sidebarLink}>
-              <FaHome style={styles.icon} /> Home
-            </a>
-          </li>
-          <li style={styles.sidebarItem}>
-            <a href="#documents" style={styles.sidebarLink} onClick={toggleDocuments}>
-              <FaFileAlt style={styles.icon} /> Documentos
-            </a>
-            {showDocuments && (
-              <ul style={styles.documentList}>
-                <li style={styles.documentItem}>Documentos Assinados</li>
-                <li style={styles.documentItem}>Documentos Não Assinados</li>
-              </ul>
-            )}
-          </li>
-          <li style={styles.sidebarItem}>
-            <a href="#logout" style={styles.sidebarLink}>
-              <FaSignOutAlt style={styles.icon} /> Sair
-            </a>
-          </li>
-        </ul>
+        <li style={styles.sidebarItem}>
+          <a href="#logout" style={styles.sidebarLink}>
+            <FaSignOutAlt style={styles.icon} /> Sair
+          </a>
+        </li>
+      </ul>
 
-        <div style={styles.userInfo}>
+      <div style={styles.userInfo}>
           <img
-            src="/Avatar.png"  // URL para o avatar genérico. Substitua pela URL do avatar real.
+            src="/avatar.png" 
             alt="Avatar"
             style={styles.avatar}
           />
@@ -59,22 +50,11 @@ function Menu() {
           </h3>
           <span style={styles.userRole}>Admin</span>
         </div>
-      </div>
-
-      <div style={styles.mainContent}>
-        <h2 style={styles.pageTitle}>Dashboard Principal</h2>
-      </div>
     </div>
   );
 }
 
 const styles = {
-  dashboardContainer: {
-    display: 'flex',
-    height: '100vh',
-    fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
-    backgroundColor: '#f4f7fc',
-  },
   sidebar: {
     width: '250px',
     background: 'linear-gradient(180deg, #4B9CE2 0%, #6FC3E9 100%)',
@@ -114,6 +94,7 @@ const styles = {
   },
   sidebarItem: {
     marginBottom: '20px',
+    cursor: 'pointer',
   },
   sidebarLink: {
     textDecoration: 'none',
@@ -128,32 +109,7 @@ const styles = {
   icon: {
     marginRight: '10px',
   },
-  documentList: {
-    listStyleType: 'none',
-    padding: '10px',
-    marginTop: '10px',
-    backgroundColor: '#34495e',
-    borderRadius: '8px',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
-  },
-  documentItem: {
-    padding: '10px 20px',
-    color: '#ecf0f1',
-    cursor: 'pointer',
-    borderBottom: '1px solid #7f8c8d',
-  },
-  mainContent: {
-    marginLeft: '250px',
-    padding: '40px',
-    width: 'calc(100% - 250px)',
-    backgroundColor: '#E3F2FD',
-    height: '100vh',
-    overflowY: 'scroll',
-  },
-  pageTitle: {
-    fontSize: '2rem',
-    color: '#2c3e50',
-  },
+
 };
 
 export default Menu;

@@ -79,10 +79,8 @@ const styles = {
   container: {
     display: 'flex',
     justifyContent: 'center',
-    // alignItems: 'center',
     height: '100vh',
     backgroundColor: '#E3F2FD',
-    width: '100vw',
   },
   assinarBox: {
     backgroundColor: '#ffffff',
