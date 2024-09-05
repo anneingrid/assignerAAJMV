@@ -3,9 +3,10 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Cadastro from './pages/Cadastro';
 import Principal from './pages/Principal';
-import Documentos from './components/Documentos'; 
+import MeusDocumentos from './components/Documentos'; 
 import GerarChaves from './components/GerarChaves'; 
 import Assinar from './components/Assinar'; 
+import Documentos from './components/Documentos';
 
 
 
@@ -28,8 +29,8 @@ function App() {
             element={isAuthenticated ? <Principal /> : <Navigate to="/" />}
           />
           <Route
-            path="/Documentos"
-            element={isAuthenticated ? <Documentos /> : <Navigate to="/" />}
+            path="/MeusDocumentos"
+            element={isAuthenticated ? <MeusDocumentos /> : <Navigate to="/" />}
           />
           <Route
             path="/GerarChaves"
@@ -38,6 +39,10 @@ function App() {
           <Route
             path="/Assinar"
             element={isAuthenticated ? <Assinar /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/Documentos"
+            element={isAuthenticated ? <Documentos /> : <Navigate to="/" />}
           />
         </Routes>
       </div>

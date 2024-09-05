@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../Provider';
-import { FaHome, FaFileAlt, FaSignOutAlt, FaKey, FaSignature } from 'react-icons/fa'; 
+import { FaHome, FaFileAlt, FaSignOutAlt, FaKey, FaUser } from 'react-icons/fa'; 
 
 function Menu({ setActiveScreen }) {
   const { usuarioLogado } = useContext(AppContext);
@@ -21,14 +21,14 @@ function Menu({ setActiveScreen }) {
             <FaKey style={styles.icon} /> Gerar Chaves
           </a>
         </li>
-        <li style={styles.sidebarItem} onClick={() => setActiveScreen('Assinar')}>
-          <a href="#assinar" style={styles.sidebarLink}>
-            <FaSignature style={styles.icon} /> Assinar
-          </a>
-        </li>
         <li style={styles.sidebarItem} onClick={() => setActiveScreen('Documentos')}>
           <a href="#documentos" style={styles.sidebarLink}>
             <FaFileAlt style={styles.icon} /> Documentos
+          </a>
+        </li>
+        <li style={styles.sidebarItem} onClick={() => setActiveScreen('MeusDocumentos')}>
+          <a href="#meus-documentos" style={styles.sidebarLink}>
+            <FaUser style={styles.icon} /> Meus Documentos
           </a>
         </li>
 
@@ -68,6 +68,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
+    fontFamily: "Poppins"
   },
   userInfo: {
     textAlign: 'center',

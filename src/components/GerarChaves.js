@@ -1,16 +1,19 @@
 import React, { useState, useContext } from 'react';
 import { Button, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FaKey } from 'react-icons/fa'; 
+import { FaKey } from 'react-icons/fa';
 import { AppContext } from '../Provider';
 
 function GerarChaves() {
   const navigate = useNavigate();
-  const { gerarChaves } = useContext(AppContext);
+  const { gerarChaves, usuarioLogado } = useContext(AppContext);
+
 
   const handleGerarChaves = () => {
-    const idUsuario = 2; // Trocar o numero 2 pelo id do usuario logado no sistema
-    gerarChaves(idUsuario); 
+
+    gerarChaves(usuarioLogado.id_usuario);
+    alert(`Chaves Geradas com sucesso!`);
+    
   };
 
   return (
@@ -23,6 +26,7 @@ function GerarChaves() {
             onClick={handleGerarChaves}
             variant="primary"
             style={styles.gerarButton}
+          
           >
             Gerar
           </Button>
@@ -40,6 +44,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     // alignItems: 'center',
+    fontFamily: "Poppins"
   },
   gerarChavesBox: {
     backgroundColor: '#ffffff',
@@ -55,7 +60,7 @@ const styles = {
     color: '#3282F6',
     fontSize: '2rem',
     fontWeight: 'bold',
-    fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
+    fontFamily: "Poppins",
     textShadow: '1px 1px 3px rgba(0, 0, 0, 0.1)',
     marginBottom: '30px',
     display: 'flex',
@@ -74,7 +79,7 @@ const styles = {
     marginTop: '20px',
     color: '#fff',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    transition: 'background-color 0.3s, transform 0.3s', 
+    transition: 'background-color 0.3s, transform 0.3s',
   },
 };
 
