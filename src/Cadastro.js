@@ -1,8 +1,7 @@
-import bcrypt from 'bcryptjs';
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from './ConexaoBd';
+import { AppContext } from './Provider';
 
 function Cadastro() {
     const [formData, setFormData] = useState({
@@ -14,6 +13,7 @@ function Cadastro() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
+    const { cadastrarUsuario } = useContext(AppContext);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -21,12 +21,6 @@ function Cadastro() {
             ...formData,
             [name]: value
         });
-    };
-
-    const hashPassword = async (password) => {
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(password, salt);
-        return { salt, hash };
     };
 
     const handleSubmit = async (e) => {
@@ -44,32 +38,15 @@ function Cadastro() {
             return;
         }
 
-        try {
-            const { hash } = await hashPassword(formData.senha);
+        const result = await cadastrarUsuario(formData.nome, formData.email, formData.senha);
 
-            const { data, error: insertError } = await supabase
-                .from('usuarios')
-                .insert([
-                    {
-                        nome_usuario: formData.nome,
-                        email: formData.email,
-                        senha: hash
-                    }
-                ]);
-
-            if (insertError) {
-                console.error(insertError);
-                setError('Erro ao cadastrar. Tente novamente.');
-            } else {
-                setSuccess('Usuário cadastrado com sucesso! Redirecionando para a página de login...');
-                
-                setTimeout(() => {
-                    navigate('/');
-                }, 3000);
-            }
-        } catch (err) {
-            console.error(err);
-            setError('Ocorreu um erro ao cadastrar o usuário.');
+        if (result.error) {
+            setError(result.error);
+        } else {
+            setSuccess(result.success);
+            setTimeout(() => {
+                navigate('/');
+            }, 3000);
         }
     };
 
@@ -137,12 +114,6 @@ function Cadastro() {
                             <span>Já tem uma conta? </span>
                             <a href="/" style={styles.loginLink}>Entrar</a>
                         </div>
-
-                        <div style={styles.socialIconsContainer}>
-                            <i className="fab fa-facebook" style={styles.socialIcon}></i>
-                            <i className="fab fa-whatsapp" style={styles.socialIcon}></i>
-                            <i className="fab fa-telegram" style={styles.socialIcon}></i>
-                        </div>
                     </Form>
                 </Col>
             </Row>
@@ -156,7 +127,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#E3F2FD', // Cor de fundo padronizada
+        backgroundColor: '#E3F2FD',
     },
     registerBox: {
         maxWidth: '400px',
@@ -186,7 +157,6 @@ const styles = {
         fontSize: '16px',
         border: 'none',
         color: '#ffffff',
-        transition: 'background-color 0.3s ease',
     },
     loginContainer: {
         marginTop: '15px',
@@ -196,17 +166,6 @@ const styles = {
         color: '#55a6ed',
         textDecoration: 'none',
         fontWeight: 'bold',
-    },
-    socialIconsContainer: {
-        marginTop: '20px',
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '15px',
-    },
-    socialIcon: {
-        fontSize: '1.5rem',
-        color: '#5B83F1',
-        cursor: 'pointer',
     },
 };
 

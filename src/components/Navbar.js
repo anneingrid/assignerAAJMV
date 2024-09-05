@@ -1,9 +1,13 @@
-// Navbar.js
 import React from 'react';
 
-function Navbar() {
+function Navbar({ visible }) {
   return (
-    <nav style={styles.navbar}>
+    <nav style={{ 
+        ...styles.navbar, 
+        opacity: visible ? 1 : 0,
+        visibility: visible ? 'visible' : 'hidden',
+        transition: 'opacity 0.5s ease-in-out, visibility 0.5s ease-in-out'
+      }}>
       <h1 style={styles.navbarTitle}>🔐Bem-vindo ao Sistema</h1>
     </nav>
   );
@@ -22,7 +26,6 @@ const styles = {
     justifyContent: 'center',
     zIndex: 1,
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    transition: 'background-color 0.3s ease',
   },
   navbarTitle: {
     margin: 0,

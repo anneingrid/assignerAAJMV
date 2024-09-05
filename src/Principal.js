@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import GerarChaves from './components/GerarChaves';
 import Assinar from './components/Assinar';
@@ -7,14 +7,23 @@ import Menu from './components/Menu';
 import Navbar from './components/Navbar';
 
 function Dashboard() {
+  const [showNavbar, setShowNavbar] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowNavbar(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div>
-
-      <GerarChaves />
-      <Assinar/>
-      <Documentos></Documentos>
+      <Navbar visible={showNavbar} /> 
       <Menu />
-      <Navbar/>
+      <GerarChaves />
+      <Assinar />
+      <Documentos />
     </div>
   );
 }

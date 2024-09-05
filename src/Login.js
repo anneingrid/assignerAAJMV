@@ -1,44 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
-import bcrypt from 'bcryptjs';  // Importa o bcryptjs
-import { supabase } from './ConexaoBd';
+import { AppContext } from './Provider';
 
 function Login({ setIsAuthenticated }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { login } = useContext(AppContext);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
 
         if (email.trim() !== '' && password.trim() !== '') {
-            try {
-                const { data: usuario, error: fetchError } = await supabase
-                    .from('usuarios')
-                    .select('id_usuario, nome_usuario, senha')
-                    .eq('email', email)
-                    .single();
-
-                if (fetchError || !usuario) {
-                    setError('Usuário não encontrado.');
-                    return;
-                }
-
-                const isPasswordCorrect = bcrypt.compareSync(password, usuario.senha);
-
-                if (!isPasswordCorrect) {
-                    setError('Senha incorreta.');
-                    return;
-                }
-
+            const result = await login(email, password);
+            if (result.error) {
+                setError(result.error);
+            } else {
                 setIsAuthenticated(true);
                 navigate('/Principal');
-            } catch (error) {
-                console.error('Erro durante o login:', error);
-                setError('Erro durante o login. Tente novamente.');
             }
         } else {
             setError('Por favor, preencha todos os campos.');
