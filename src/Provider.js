@@ -210,93 +210,124 @@ export const AppProvider = ({ children }) => {
             return null;
         }
     }
-async function buscarChave(idUsuario) {
-    try {
-        const { data, error } = await supabase
-            .from('usuarios')
-            .select('chave_privada')
-            .eq('id_usuario', idUsuario);
+    async function buscarChave(idUsuario) {
+        try {
+            const { data, error } = await supabase
+                .from('usuarios')
+                .select('chave_privada')
+                .eq('id_usuario', idUsuario);
 
-        if (error || !data.length) {
-            console.error('Erro ao buscar chaves', error);
+            if (error || !data.length) {
+                console.error('Erro ao buscar chaves', error);
+                return null;
+            }
+
+            const chavePrivadaBase64 = data[0].chave_privada;
+            const chavePrivadaBuffer = Uint8Array.from(atob(chavePrivadaBase64), c => c.charCodeAt(0)).buffer;
+
+            const privateKey = await window.crypto.subtle.importKey(
+                'pkcs8',
+                chavePrivadaBuffer,
+                {
+                    name: 'RSA-PSS',
+                    hash: { name: 'SHA-256' }
+                },
+                true,
+                ['sign']
+            );
+
+            return privateKey;
+        } catch (error) {
+            console.error('Erro ao importar chave privada', error.message || error);
+            return null;
+        }
+    }
+    async function cadastrarUsuario(nome, email, senha) {
+        try {
+            const hashedPassword = await hashPassword(senha);
+
+            const { data, error } = await supabase
+                .from('usuarios')
+                .insert([{ nome_usuario: nome, email: email, senha: hashedPassword }]);
+
+            if (error) {
+                console.error('Erro ao cadastrar o usuário:', error.message || error);
+                return { error: 'Erro ao cadastrar o usuário. Tente novamente.' };
+            }
+
+            return { success: 'Usuário cadastrado com sucesso!' };
+        } catch (error) {
+            console.error('Erro no processo de cadastro:', error.message || error);
+            return { error: 'Erro no processo de cadastro. Tente novamente.' };
+        }
+    }
+
+    async function login(email, password) {
+        try {
+            const { data: usuario, error: fetchError } = await supabase
+                .from('usuarios')
+                .select('id_usuario, nome_usuario, senha')
+                .eq('email', email)
+                .single();
+
+            if (fetchError || !usuario) {
+                return { error: 'Usuário não encontrado.' };
+            }
+
+            const isPasswordCorrect = bcrypt.compareSync(password, usuario.senha);
+
+            if (!isPasswordCorrect) {
+                return { error: 'Senha incorreta.' };
+            }
+
+            setUsuarioLogado(usuario);
+            salvarUsuarioNoLocalStorage(usuario); // Salva no localStorage
+
+            return { success: true, usuario };
+        } catch (error) {
+            console.error('Erro durante o login:', error);
+            return { error: 'Erro durante o login. Tente novamente.' };
+        }
+    }
+    async function hashPassword(password) {
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(password, salt);
+        return hash;
+    }
+    async function salvarDocumento(idUsuario, text) {
+        const hash = await gerarHash(text);
+        try {
+            const { data, error } = await supabase
+                .from('documentos')
+                .insert([
+                    {
+                        id_usuario: idUsuario,
+                        mensagem_documento: text,
+                        documento_hash: hash
+                    }
+
+                ])
+                .select()
+            if (error) {
+                console.error('Erro ao salvar documento', error.message || error);
+                return null;
+            }
+            if (data && data.length > 0) {
+                const idDocumento = data[0].id_documento; // Acessa o id_documento do primeiro item
+                return idDocumento;
+            } else {
+                console.error('Nenhum dado foi retornado após salvar o documento.');
+                return null;
+            }
+        } catch (error) {
+            console.error('Erro ao salvar documento', error.message || error);
             return null;
         }
 
-        const chavePrivadaBase64 = data[0].chave_privada;
-        const chavePrivadaBuffer = Uint8Array.from(atob(chavePrivadaBase64), c => c.charCodeAt(0)).buffer;
-
-        const privateKey = await window.crypto.subtle.importKey(
-            'pkcs8',
-            chavePrivadaBuffer,
-            {
-                name: 'RSA-PSS',
-                hash: { name: 'SHA-256' }
-            },
-            true,
-            ['sign']
-        );
-
-        return privateKey;
-    } catch (error) {
-        console.error('Erro ao importar chave privada', error.message || error);
-        return null;
     }
-}
-async function cadastrarUsuario(nome, email, senha) {
-    try {
-        const hashedPassword = await hashPassword(senha);
-
-        const { data, error } = await supabase
-            .from('usuarios')
-            .insert([{ nome_usuario: nome, email: email, senha: hashedPassword }]);
-
-        if (error) {
-            console.error('Erro ao cadastrar o usuário:', error.message || error);
-            return { error: 'Erro ao cadastrar o usuário. Tente novamente.' };
-        }
-
-        return { success: 'Usuário cadastrado com sucesso!' };
-    } catch (error) {
-        console.error('Erro no processo de cadastro:', error.message || error);
-        return { error: 'Erro no processo de cadastro. Tente novamente.' };
-    }
-}
-
-async function login(email, password) {
-    try {
-        const { data: usuario, error: fetchError } = await supabase
-            .from('usuarios')
-            .select('id_usuario, nome_usuario, senha')
-            .eq('email', email)
-            .single();
-
-        if (fetchError || !usuario) {
-            return { error: 'Usuário não encontrado.' };
-        }
-
-        const isPasswordCorrect = bcrypt.compareSync(password, usuario.senha);
-
-        if (!isPasswordCorrect) {
-            return { error: 'Senha incorreta.' };
-        }
-
-        setUsuarioLogado(usuario);
-        salvarUsuarioNoLocalStorage(usuario); // Salva no localStorage
-
-        return { success: true, usuario };
-    } catch (error) {
-        console.error('Erro durante o login:', error);
-        return { error: 'Erro durante o login. Tente novamente.' };
-    }
-}
-async function hashPassword(password) {
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, salt);
-    return hash;
-}
-return (
-        <AppContext.Provider value={{ login, cadastrarUsuario, usuarioLogado, gerarHash, gerarAssinatura, gerarChaves, listarDocumentosAssinados, listarDocumentosNaoAssinados }}>
+    return (
+        <AppContext.Provider value={{ salvarDocumento, login, cadastrarUsuario, usuarioLogado, gerarHash, gerarAssinatura, gerarChaves, listarDocumentosAssinados, listarDocumentosNaoAssinados }}>
             {children}
         </AppContext.Provider>
-        );
+    );
 };
