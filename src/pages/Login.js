@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { AppContext } from '../Provider';
-
+import { FaLock } from 'react-icons/fa';
 function Login({ setIsAuthenticated }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -31,7 +31,13 @@ function Login({ setIsAuthenticated }) {
         <Container fluid style={styles.container}>
             <Row className="justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
                 <Col md={12} style={styles.loginBox}>
-                    <h2 className="text-center mb-4" style={styles.title}>🔐 Bem-vindo ao Sistema</h2>
+                    <FaLock style={{
+                        color: '#3282F6',
+                        fontSize: '2rem',
+                    }}></FaLock>
+                    <h2 className="text-center mb-4" style={styles.title}><span style={{ fontSize: 20 }}>
+                        Bem-vindo ao</span><br /> AAJMV Signature</h2>
+
                     {error && <Alert variant="danger">{error}</Alert>}
                     <Form onSubmit={handleLogin}>
                         <Form.Group controlId="formBasicEmail">

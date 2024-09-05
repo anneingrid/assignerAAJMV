@@ -44,6 +44,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     // alignItems: 'center',
+    fontFamily: "Poppins"
   },
   gerarChavesBox: {
     backgroundColor: '#ffffff',
@@ -59,7 +60,7 @@ const styles = {
     color: '#3282F6',
     fontSize: '2rem',
     fontWeight: 'bold',
-    fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
+    fontFamily: "Poppins",
     textShadow: '1px 1px 3px rgba(0, 0, 0, 0.1)',
     marginBottom: '30px',
     display: 'flex',

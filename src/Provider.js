@@ -19,26 +19,17 @@ export const AppProvider = ({ children }) => {
     };
 
     const base64ToArrayBuffer = (base64) => {
-        try {
-            // Adiciona padding se necessário
-            const padding = base64.length % 4 === 0 ? '' : '='.repeat(4 - (base64.length % 4));
-            const base64WithPadding = base64 + padding;
-    
-            // Decodifica a string base64
-            const binaryString = atob(base64WithPadding);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-    
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            return bytes.buffer;
-        } catch (error) {
-            console.error('Erro ao converter base64 para ArrayBuffer:', error.message || error);
-            throw error;
+        const binaryString = atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
         }
+        return bytes.buffer;
     };
-    
+
+
 
     const gerarHash = async (text) => {
         const encoder = new TextEncoder();
@@ -110,19 +101,27 @@ export const AppProvider = ({ children }) => {
             if (!privateKey) {
                 throw new Error('Chave privada não encontrada ou inválida');
             }
-
-            const textBuffer = new TextEncoder().encode(text);
+            
+            const enc = new TextEncoder().encode(text);
             const signature = await window.crypto.subtle.sign(
-                { name: "RSA-PSS", saltLength: 32 },
+                {
+                    name: "RSA-PSS",
+                    saltLength: 32
+                },
                 privateKey,
-                textBuffer
+                enc
             );
 
             const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
 
             const { data, error } = await supabase
                 .from('assinaturas')
-                .insert([{ id_documento: idDocumento, id_usuario: idUsuario, assinatura_hash: hash, assinatura: signatureBase64 }]);
+                .insert([{
+                    id_documento: idDocumento,
+                    id_usuario: idUsuario,
+                    assinatura_hash: hash,
+                    assinatura: signature
+                }]);
 
             if (error) {
                 console.error('Erro ao inserir a assinatura:', error.message || error);
@@ -139,7 +138,12 @@ export const AppProvider = ({ children }) => {
     const gerarChaves = async (idUsuario) => {
         try {
             const keyPair = await window.crypto.subtle.generateKey(
-                { name: "RSA-PSS", modulusLength: 2048, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: "SHA-512" },
+                {
+                    name: "RSA-PSS",
+                    modulusLength: 2048,
+                    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+                    hash: "SHA-512"
+                },
                 true,
                 ["sign", "verify"]
             );
@@ -318,21 +322,21 @@ export const AppProvider = ({ children }) => {
             }
 
             const signatureBase64 = assinaturaData.assinatura;
-            const documentoHash = assinaturaData.documentos.documento_hash;
+            const documentoHash = assinaturaData.documentos.mensagem_documento;
             const publicKey = await buscarChavePublica(id_usuario);
 
             if (!publicKey) {
                 console.error("Erro ao importar a chave pública.");
                 return false;
             }
-
+          
             const encoded = new TextEncoder().encode(documentoHash);
             const signatureArrayBuffer = base64ToArrayBuffer(signatureBase64);
 
             const result = await window.crypto.subtle.verify(
                 { name: "RSA-PSS", saltLength: 32 },
                 publicKey,
-                signatureArrayBuffer,
+                signatureBase64,
                 encoded
             );
 

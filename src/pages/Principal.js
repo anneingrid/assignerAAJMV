@@ -2,9 +2,10 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AppContext } from '../Provider';
 import GerarChaves from '../components/GerarChaves';
 import Assinar from '../components/Assinar';
-import Documentos from '../components/Documentos';
+import MeusDocumentos from '../components/MeusDocumentos';
 import Menu from '../components/Menu';
 import Navbar from '../components/Navbar';
+import Documentos from '../components/Documentos';
 
 function Dashboard() {
   const { usuarioLogado } = useContext(AppContext);
@@ -25,6 +26,8 @@ function Dashboard() {
         return <GerarChaves />;
       case 'Assinar':
         return <Assinar />;
+      case 'MeusDocumentos':
+        return <MeusDocumentos />;
       case 'Documentos':
         return <Documentos />;
       default:

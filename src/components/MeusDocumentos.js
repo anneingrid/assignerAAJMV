@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../Provider';
 import { FaFileSignature, FaPen, FaEye } from 'react-icons/fa';
+import Assinar from './Assinar';
 import { Button } from 'react-bootstrap';
 
-function Documentos() {
+function MeusDocumentos() {
   const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados, verificarAssinatura, gerarAssinatura } = useContext(AppContext);
   const [documentosAssinados, setDocumentosAssinados] = useState([]);
   const [documentosNaoAssinados, setDocumentosNaoAssinados] = useState([]);
@@ -31,13 +32,15 @@ function Documentos() {
 
   return (
     <div style={styles.container}>
-     <h1 style={{backgroundColor:"rgb(227, 242, 253)", 
+      <h1 style={{backgroundColor:"rgb(227, 242, 253)", 
         paddingTop:10, 
         paddingBottom:10, 
         paddingLeft:2, 
         borderRadius:20,
         textAlign:'center'
-        }}>Todos os documentos</h1>
+        }}>Meus Documentos</h1>
+      <Assinar />
+      
       <h2 style={styles.title}>Assinados</h2>
       {documentosAssinados.length > 0 ? (
         <div style={styles.tableContainer}>
@@ -47,7 +50,7 @@ function Documentos() {
                 <th>Texto do Documento</th>
                 <th >Assinado em</th>
                 <th>Status</th>
-                <th>Proprietário</th>
+                
                 <th>Ação</th>
               </tr>
             </thead>
@@ -70,7 +73,7 @@ function Documentos() {
                   <td>
                     <span style={{ ...styles.status, backgroundColor: '#A5D6A7' }}>Assinado</span>
                   </td>
-                  <td>{usuarioLogado.nome_usuario}</td>
+                  
                   <td>
                     <Button
                       style={styles.actionButton}
@@ -105,8 +108,8 @@ function Documentos() {
                 <th >Texto do Documento</th>
                 <th>Data de criação</th>
                 <th>Status</th>
-                <th>Proprietário</th>
                 
+                <th>Ação</th>
               </tr>
             </thead>
             <tbody>
@@ -127,8 +130,19 @@ function Documentos() {
                   <td>
                     <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
                   </td>
-                  <td>{usuarioLogado.nome_usuario}</td>
-                  
+               
+                  <td style={{ alignItems: 'center' }}>
+
+                    <Button style={styles.actionButton}
+                      onClick={async () => {
+                        alert(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
+                        gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
+                        setNeedsUpdate(true);
+                      }}>
+
+                      <FaPen style={styles.icon} /> Assinar
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -187,7 +201,6 @@ const styles = {
     textAlign: 'left',
     fontSize: '1rem',
     color: '#34495e',
-    
   },
   status: {
     padding: '4px 8px',
@@ -195,7 +208,6 @@ const styles = {
     color: '#fff',
     fontSize: '14px',
     alignItems: 'center',
-
   },
   actionButton: {
     backgroundColor: '#81D4FA',
@@ -218,4 +230,4 @@ const styles = {
   },
 };
 
-export default Documentos;
+export default MeusDocumentos;

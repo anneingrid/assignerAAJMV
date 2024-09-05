@@ -36,7 +36,7 @@ function Assinar() {
 
       if (idDocumento) {
         setId_documento(idDocumento);
-        setDonoDocumento(usuarioLogado.nome || usuarioLogado.id_usuario); // Define o dono do documento
+        setDonoDocumento(usuarioLogado.nome || usuarioLogado.id_usuario); 
         setDocumentoSalvo(true);
         setIsDisabled(true);
         setIsTextAreaDisabled(true);
@@ -60,7 +60,7 @@ function Assinar() {
   return (
     <Container style={styles.container}>
       <div style={styles.assinarBox}>
-        <h2 style={styles.title}>Adicionar Documento</h2>
+        <h2 style={styles.title}>Novo Documento</h2>
 
         {!mostrarFormulario && !documentoSalvo && (
           <Button
@@ -147,12 +147,15 @@ const styles = {
     color: '#2c3e50',
     borderBottom: '2px solid #3498db',
     paddingBottom: '10px',
+  fontFamily: "Poppins"
+
   },
   textArea: {
     borderRadius: '12px',
     padding: '10px',
     fontSize: '16px',
     resize: 'none',
+
   },
   viewButton: {
     backgroundColor: '#A5D6A7',
@@ -162,6 +165,7 @@ const styles = {
     border: 'none',
     margin: '0 5px',
     width: 'auto',
+    fontFamily: "Poppins"
   },
   signButton: {
     backgroundColor: '#81D4FA',
@@ -171,6 +175,7 @@ const styles = {
     border: 'none',
     margin: '0 5px',
     width: 'auto',
+    fontFamily: "Poppins"
   },
 };
 
