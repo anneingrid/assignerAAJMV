@@ -165,7 +165,8 @@ const styles = {
     border: 'none',
     margin: '0 5px',
     width: 'auto',
-    fontFamily: "Poppins"
+    fontFamily: "Poppins",
+    marginBottom: "20px"
   },
   signButton: {
     backgroundColor: '#81D4FA',
