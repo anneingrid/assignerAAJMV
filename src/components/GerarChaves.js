@@ -7,13 +7,13 @@ import { AppContext } from '../Provider';
 function GerarChaves() {
   const navigate = useNavigate();
   const { gerarChaves, usuarioLogado } = useContext(AppContext);
-  const [isDisabled, setIsDisabled] = useState(true);
+
 
   const handleGerarChaves = () => {
 
     gerarChaves(usuarioLogado.id_usuario);
-    alert(`Chaves Geradad com sucesso!`);
-    setIsDisabled(true);
+    alert(`Chaves Geradas com sucesso!`);
+    
   };
 
   return (
@@ -26,7 +26,7 @@ function GerarChaves() {
             onClick={handleGerarChaves}
             variant="primary"
             style={styles.gerarButton}
-            disabled={isDisabled}
+          
           >
             Gerar
           </Button>

@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../Provider';
-import { FaDownload, FaEye } from 'react-icons/fa';
+import { FaDownload, FaEye, FaFileSignature, FaPen } from 'react-icons/fa';
 import Assinar from './Assinar';
 import { Button } from 'react-bootstrap';
 
+
 function Documentos() {
-  const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados } = useContext(AppContext);
+  const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados, verificarAssinatura } = useContext(AppContext);
   const [documentosAssinados, setDocumentosAssinados] = useState([]);
   const [documentosNaoAssinados, setDocumentosNaoAssinados] = useState([]);
 
@@ -23,9 +24,7 @@ function Documentos() {
     }
   }, [usuarioLogado, documentosAssinados, documentosNaoAssinados]);
 
-  const handleDownload = (documento) => {
-    console.log(`Baixando o documento: ${documento.documentos.mensagem_documento}`);
-  };
+
 
   const handleView = (documento) => {
     console.log(`Visualizando o documento: ${documento.documentos.mensagem_documento}`);
@@ -59,9 +58,20 @@ function Documentos() {
                     <Button style={styles.actionButton} onClick={() => handleView(documento)}>
                       <FaEye style={styles.icon} /> Visualizar
                     </Button>
-                    <Button style={styles.actionButton} onClick={() => handleDownload(documento)}>
-                      <FaDownload style={styles.icon} /> Verificar Assinatura
+                    <Button
+                      style={styles.actionButton}
+                      onClick={async () => {
+                        const isValid = await verificarAssinatura(documento.id_documento, usuarioLogado.id_usuario);
+                        if (isValid) {
+                          alert("Assinatura válida!");
+                        } else {
+                          alert("Assinatura inválida!");
+                        }
+                      }}
+                    >
+                      <FaFileSignature style={styles.icon} /> Verificar Assinatura
                     </Button>
+
                   </td>
                 </tr>
               ))}
@@ -92,12 +102,12 @@ function Documentos() {
                   <td>
                     <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
                   </td>
-                  <td style={{alignItems:'center'}}>
+                  <td style={{ alignItems: 'center' }}>
                     <Button style={styles.actionButton} onClick={() => handleView(documento)}>
                       <FaEye style={styles.icon} /> Visualizar
                     </Button>
-                    <Button style={styles.actionButton} onClick={() => handleDownload(documento)}>
-                      <FaDownload style={styles.icon} /> Assinar
+                    <Button style={styles.actionButton} >
+                      <FaPen style={styles.icon} /> Assinar
                     </Button>
                   </td>
                 </tr>
@@ -145,6 +155,7 @@ const styles = {
   tableRow: {
     borderBottom: '1px solid #bdc3c7',
   },
+  
   th: {
     padding: '12px',
     backgroundColor: '#3498db',
