@@ -15,7 +15,7 @@ export const AppProvider = ({ children }) => {
         console.log('Usuário carregado do localStorage:', usuario);
 
     }, []);
-    
+
     const salvarUsuarioNoLocalStorage = (usuario) => {
         localStorage.setItem('usuarioLogado', JSON.stringify(usuario));
     };
@@ -87,19 +87,47 @@ export const AppProvider = ({ children }) => {
     async function gerarAssinatura(idDocumento, idUsuario, text) {
         try {
             const hash = await gerarHash(text);
+            const privateKey = await buscarChave(idUsuario);
+
+            if (!privateKey) {
+                throw new Error('Chave privada não encontrada ou inválida');
+            }
+
+            const textBuffer = new TextEncoder().encode(text);
+
+            let signature = await window.crypto.subtle.sign(
+                {
+                    name: "RSA-PSS",
+                    saltLength: 32,
+                },
+                privateKey,
+                textBuffer
+            );
+
+            console.log('Assinatura gerada:', new Uint8Array(signature));
+
             const { data, error } = await supabase
                 .from('assinaturas')
-                .insert([{ id_documento: idDocumento, id_usuario: idUsuario, assinatura_hash: hash }]);
+                .insert([
+                    {
+                        id_documento: idDocumento,
+                        id_usuario: idUsuario,
+                        assinatura_hash: hash,
+                    },
+                ]);
+
             if (error) {
                 console.error('Erro ao inserir a assinatura:', error.message || error);
                 return null;
             }
+
             return data;
         } catch (error) {
             console.error('Erro ao gerar a assinatura:', error.message || error);
             return null;
         }
     }
+
 
     async function gerarChaves(idUsuario) {
         try {
@@ -182,9 +210,72 @@ export const AppProvider = ({ children }) => {
             return null;
         }
     }
+    async function buscarChave(idUsuario) {
+        try {
+            const { data, error } = await supabase
+                .from('usuarios')
+                .select('chave_privada')
+                .eq('id_usuario', idUsuario);
 
+            if (error || !data.length) {
+                console.error('Erro ao buscar chaves', error);
+                return null;
+            }
+
+            const chavePrivadaBase64 = data[0].chave_privada;
+            const chavePrivadaBuffer = Uint8Array.from(atob(chavePrivadaBase64), c => c.charCodeAt(0)).buffer;
+
+            const privateKey = await window.crypto.subtle.importKey(
+                'pkcs8',
+                chavePrivadaBuffer,
+                {
+                    name: 'RSA-PSS',
+                    hash: { name: 'SHA-256' }
+                },
+                true,
+                ['sign']
+            );
+
+            return privateKey;
+        } catch (error) {
+            console.error('Erro ao importar chave privada', error.message || error);
+            return null;
+        }
+    }
+
+    async function salvarDocumento(idUsuario, text) {
+        const hash = await gerarHash(text);
+        try {
+            const { data, error } = await supabase
+                .from('documentos')
+                .insert([
+                    {
+                        id_usuario: idUsuario,
+                        mensagem_documento: text,
+                        documento_hash: hash
+                    }
+
+                ])
+                .select()
+            if (error) {
+                console.error('Erro ao salvar documento', error.message || error);
+                return null;
+            }
+            if (data && data.length > 0) {
+                const idDocumento = data[0].id_documento; // Acessa o id_documento do primeiro item
+                return idDocumento;
+            } else {
+                console.error('Nenhum dado foi retornado após salvar o documento.');
+                return null;
+            }
+        } catch (error) {
+            console.error('Erro ao salvar documento', error.message || error);
+            return null;
+        }
+
+    }
     return (
-        <AppContext.Provider value={{ login,cadastrarUsuario,usuarioLogado, gerarHash, gerarAssinatura, gerarChaves, listarDocumentosAssinados, listarDocumentosNaoAssinados }}>
+        <AppContext.Provider value={{ salvarDocumento, login, cadastrarUsuario, usuarioLogado, gerarHash, gerarAssinatura, gerarChaves, listarDocumentosAssinados, listarDocumentosNaoAssinados }}>
             {children}
         </AppContext.Provider>
     );

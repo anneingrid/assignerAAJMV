@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import GerarChaves from './components/GerarChaves';
-import Assinar from './components/Assinar';
-import Documentos from './components/Documentos';
-import Menu from './components/Menu';
-import Navbar from './components/Navbar';
+import React, { useState, useEffect, useContext } from 'react';
+import { AppContext } from '../Provider';
+import GerarChaves from '../components/GerarChaves';
+import Assinar from '../components/Assinar';
+import Documentos from '../components/Documentos';
+import Menu from '../components/Menu';
+import Navbar from '../components/Navbar';
 
 function Dashboard() {
+  const { usuarioLogado } = useContext(AppContext);
   const [showNavbar, setShowNavbar] = useState(true);
-  const [activeScreen, setActiveScreen] = useState('GerarChaves'); // Estado para controlar a tela ativa
+  const [activeScreen, setActiveScreen] = useState('GerarChaves'); 
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -17,7 +19,6 @@ function Dashboard() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Função para renderizar o conteúdo da tela com base na escolha
   const renderActiveScreen = () => {
     switch (activeScreen) {
       case 'GerarChaves':

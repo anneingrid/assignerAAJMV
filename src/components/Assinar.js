@@ -1,21 +1,57 @@
-import React, { useState, useContext } from 'react';
-import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import React, { useState, useContext, useEffect } from 'react';
+import { Container, Row, Col, Form, Button, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Modal from './Modal';
 import { AppContext } from '../Provider';
 
 function Assinar() {
-  const { gerarAssinatura } = useContext(AppContext);
+  const { gerarAssinatura, salvarDocumento, usuarioLogado } = useContext(AppContext);
   const [textoDocumento, setTextoDocumento] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [isTextAreaDisabled, setIsTextAreaDisabled] = useState(false); 
+  const [isDisabled, setIsDisabled] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedDisabledState = localStorage.getItem('isDisabled');
+    if (savedDisabledState !== null) {
+      setIsDisabled(JSON.parse(savedDisabledState));
+    } else {
+      setIsDisabled(false);
+    }
+    const savedTextAreaState = localStorage.getItem('isTextAreaDisabled');
+    if (savedTextAreaState !== null) {
+      setIsTextAreaDisabled(JSON.parse(savedTextAreaState));
+    } else {
+      setIsTextAreaDisabled(false);
+    }
+  }, [usuarioLogado]);
 
   const assinarDocumento = () => {
     alert(`Documento assinado com sucesso!\nTexto do documento: ${textoDocumento}`);
-    gerarAssinatura(0, 1, textoDocumento);
-     
+    gerarAssinatura(usuarioLogado.id_usuario, textoDocumento);
     navigate('/Documentos');
   };
+
+  const salvarDocumentos = async () => {
+    
+    try {
+      alert(`Documento salvo com sucesso!\nTexto do documento: ${textoDocumento}`);
+      const idDocumento = await salvarDocumento(usuarioLogado.id_usuario, textoDocumento);
+      
+      if (idDocumento) {
+        console.log('Documento salvo com ID:', idDocumento);
+        setIsDisabled(true); // Desabilita o botão "Salvar"
+        setIsTextAreaDisabled(true); // Desabilita o campo de texto
+        
+      } else {
+        console.error('Erro ao obter ID do documento.');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar documento:', error.message || error);
+    }
+  };
+  
 
   const visualizarDocumento = () => {
     setShowModal(true);
@@ -25,8 +61,10 @@ function Assinar() {
     setShowModal(false);
   };
 
-  const navigateToDocuments = () => {
-    navigate('/Documentos');
+  const inserirNovoArquivo = () => {
+  setTextoDocumento(''); // Limpa o campo de texto
+  setIsDisabled(false);  // Reabilita o botão "Salvar"
+  setIsTextAreaDisabled(false); // Reabilita o campo de texto
   };
 
   return (
@@ -43,23 +81,50 @@ function Assinar() {
                 value={textoDocumento}
                 onChange={(e) => setTextoDocumento(e.target.value)}
                 style={styles.textArea}
+                disabled={isTextAreaDisabled} // Desabilita o campo de texto quando necessário
               />
             </Form.Group>
-            <div style={styles.buttonGroup}>
-              <Button
-                variant="secondary"
-                onClick={visualizarDocumento}
-                style={styles.viewButton}
-              >
-                Salvar
-              </Button>
-              <Button
-                variant="primary"
-                onClick={assinarDocumento}
-                style={styles.signButton}
-              >
-                Assinar
-              </Button>
+            <div>
+              {isDisabled ? (
+                <div>
+                  <div>
+                    <Badge pill bg="success" style={{ marginTop: '10px', marginBottom: '10px' }}>
+                      Documento salvo
+                    </Badge>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div>
+                      <Button
+                        variant="primary"
+                        onClick={assinarDocumento}
+                        style={styles.signButton}
+                      >
+                        Assinar
+                      </Button>
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                      <Button
+                        variant="secondary"
+                        onClick={inserirNovoArquivo}
+                        style={styles.viewButton}
+                      >
+                        Novo Arquivo
+                      </Button>
+                    </div>
+                  </div>
+
+                </div>
+              ) : (
+                <div style={{ marginTop: '10px' }}>
+                  <Button
+                    variant="secondary"
+                    onClick={salvarDocumentos}
+                    style={styles.viewButton}
+                  >
+                    Salvar
+                  </Button>
+                </div>
+              )}
             </div>
           </Form>
         </Col>
@@ -69,7 +134,7 @@ function Assinar() {
         show={showModal}
         onClose={fecharModal}
         textoDocumento={textoDocumento}
-        navigateToDocuments={navigateToDocuments}
+        navigateToDocuments={() => navigate('/Documentos')}
       />
     </Container>
   );
@@ -105,11 +170,6 @@ const styles = {
     fontSize: '16px',
     resize: 'none',
   },
-  buttonGroup: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginTop: '10px',
-  },
   viewButton: {
     backgroundColor: '#A5D6A7',
     borderRadius: '30px',
@@ -117,7 +177,7 @@ const styles = {
     fontSize: '16px',
     border: 'none',
     margin: '0 5px',
-    width: 150
+    width: 150,
   },
   signButton: {
     backgroundColor: '#81D4FA',
@@ -126,7 +186,7 @@ const styles = {
     fontSize: '16px',
     border: 'none',
     margin: '0 5px',
-    width: 150
+    width: 150,
   },
 };
 

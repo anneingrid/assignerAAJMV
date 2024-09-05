@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { AppContext } from './Provider';
+import { AppContext } from '../Provider';
 
 function Cadastro() {
     const [formData, setFormData] = useState({
