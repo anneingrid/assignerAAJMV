@@ -1,9 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../Provider';
-import { FaDownload, FaEye, FaFileSignature, FaPen } from 'react-icons/fa';
+import { FaFileSignature, FaPen } from 'react-icons/fa';
 import Assinar from './Assinar';
 import { Button } from 'react-bootstrap';
-
 
 function Documentos() {
   const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados, verificarAssinatura } = useContext(AppContext);
@@ -22,17 +21,15 @@ function Documentos() {
 
       fetchDocumentos();
     }
-  }, [usuarioLogado, documentosAssinados, documentosNaoAssinados]);
+  }, [usuarioLogado]);
 
-
-
-  const handleView = (documento) => {
-    console.log(`Visualizando o documento: ${documento.documentos.mensagem_documento}`);
+  const handleEmptyField = (field) => {
+    return field && field.trim() !== '' ? field : 'Campo vazio';
   };
 
   return (
     <div style={styles.container}>
-      <Assinar></Assinar>
+      <Assinar />
       <h2 style={styles.title}>Documentos Assinados</h2>
       {documentosAssinados.length > 0 ? (
         <div style={styles.tableContainer}>
@@ -42,22 +39,20 @@ function Documentos() {
                 <th>Nome do Documento</th>
                 <th>Assinado em</th>
                 <th>Status</th>
-                <th>Ações</th>
+                <th>Dono</th> 
+                <th>Ação</th>
               </tr>
             </thead>
             <tbody>
               {documentosAssinados.map((documento) => (
                 <tr key={documento.id_documento} style={styles.tableRow}>
-                  <td>{documento.documentos.mensagem_documento}</td>
+                  <td>{handleEmptyField(documento.documentos.mensagem_documento)}</td>
                   <td>{new Date(documento.assinado_em).toLocaleString()}</td>
-
                   <td>
                     <span style={{ ...styles.status, backgroundColor: '#A5D6A7' }}>Assinado</span>
                   </td>
+                  <td>{usuarioLogado.nome_usuario}</td> 
                   <td>
-                    <Button style={styles.actionButton} onClick={() => handleView(documento)}>
-                      <FaEye style={styles.icon} /> Visualizar
-                    </Button>
                     <Button
                       style={styles.actionButton}
                       onClick={async () => {
@@ -71,7 +66,6 @@ function Documentos() {
                     >
                       <FaFileSignature style={styles.icon} /> Verificar Assinatura
                     </Button>
-
                   </td>
                 </tr>
               ))}
@@ -91,22 +85,21 @@ function Documentos() {
                 <th>Nome do Documento</th>
                 <th>Data de criação</th>
                 <th>Status</th>
-                <th>Ações</th>
+                <th>Dono</th> 
+                <th>Ação</th>
               </tr>
             </thead>
             <tbody>
               {documentosNaoAssinados.map((documento) => (
                 <tr key={documento.id_documento} style={styles.tableRow}>
-                  <td>{documento.mensagem_documento}</td>
+                  <td>{handleEmptyField(documento.mensagem_documento)}</td>
                   <td>{new Date(documento.criado_em).toLocaleString()}</td>
                   <td>
                     <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
                   </td>
+                  <td>{usuarioLogado.nome_usuario}</td> {/* Mostrando o nome do dono, que é o usuário logado */}
                   <td style={{ alignItems: 'center' }}>
-                    <Button style={styles.actionButton} onClick={() => handleView(documento)}>
-                      <FaEye style={styles.icon} /> Visualizar
-                    </Button>
-                    <Button style={styles.actionButton} >
+                    <Button style={styles.actionButton}>
                       <FaPen style={styles.icon} /> Assinar
                     </Button>
                   </td>
@@ -155,25 +148,12 @@ const styles = {
   tableRow: {
     borderBottom: '1px solid #bdc3c7',
   },
-  
-  th: {
-    padding: '12px',
-    backgroundColor: '#3498db',
-    color: '#fff',
-    textAlign: 'left',
-  },
-  td: {
-    padding: '12px',
-    textAlign: 'left',
-    fontSize: '1rem',
-    color: '#34495e',
-  },
   status: {
     padding: '4px 8px',
     borderRadius: '12px',
     color: '#fff',
     fontSize: '14px',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   actionButton: {
     backgroundColor: '#81D4FA',
@@ -183,13 +163,10 @@ const styles = {
     border: 'none',
     margin: '0 5px',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   icon: {
     marginRight: '8px',
-  },
-  actionButtonHover: {
-    backgroundColor: '#3498db',
   },
   emptyMessage: {
     color: '#7f8c8d',

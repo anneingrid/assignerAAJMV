@@ -1,5 +1,5 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { Container, Form, Button, Badge } from 'react-bootstrap';
+import React, { useState, useContext } from 'react';
+import { Container, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Modal from './Modal';
 import { AppContext } from '../Provider';
@@ -10,27 +10,37 @@ function Assinar() {
   const [showModal, setShowModal] = useState(false);
   const [isTextAreaDisabled, setIsTextAreaDisabled] = useState(false);
   const [isDisabled, setIsDisabled] = useState(true);
-  const [mostrarFormulario, setMostrarFormulario] = useState(false); // Estado para controlar a exibição do formulário
-  const [documentoSalvo, setDocumentoSalvo] = useState(false); // Estado para controlar se o documento foi salvo
+  const [mostrarFormulario, setMostrarFormulario] = useState(false); 
+  const [documentoSalvo, setDocumentoSalvo] = useState(false); 
   const navigate = useNavigate();
   const [id_documento, setId_documento] = useState('');
+  const [donoDocumento, setDonoDocumento] = useState(''); // Novo estado para capturar o dono do documento
 
   const assinarDocumento = () => {
+    if (textoDocumento.trim() === '') {
+      alert('O texto do documento não pode estar vazio.');
+      return;
+    }
     alert(`Documento assinado com sucesso!\nTexto do documento: ${textoDocumento}`);
     gerarAssinatura(id_documento, usuarioLogado.id_usuario, textoDocumento);
   };
 
   const salvarDocumentos = async () => {
+    if (textoDocumento.trim() === '') {
+      alert('O texto do documento não pode estar vazio.');
+      return;
+    }
     try {
       alert(`Documento salvo com sucesso!\nTexto do documento: ${textoDocumento}`);
       const idDocumento = await salvarDocumento(usuarioLogado.id_usuario, textoDocumento);
 
       if (idDocumento) {
         setId_documento(idDocumento);
-        setDocumentoSalvo(true); // Documento salvo com sucesso
-        setIsDisabled(true); // Desabilita o botão "Salvar"
-        setIsTextAreaDisabled(true); // Desabilita o campo de texto
-        setMostrarFormulario(false); // Oculta o formulário após salvar
+        setDonoDocumento(usuarioLogado.nome || usuarioLogado.id_usuario); // Define o dono do documento
+        setDocumentoSalvo(true);
+        setIsDisabled(true);
+        setIsTextAreaDisabled(true);
+        setMostrarFormulario(false); 
       } else {
         console.error('Erro ao obter ID do documento.');
       }
@@ -40,11 +50,11 @@ function Assinar() {
   };
 
   const inserirNovoArquivo = () => {
-    setTextoDocumento(''); // Limpa o campo de texto
-    setIsDisabled(false);  // Reabilita o botão "Salvar"
-    setIsTextAreaDisabled(false); // Reabilita o campo de texto
-    setMostrarFormulario(true); // Exibe o formulário novamente
-    setDocumentoSalvo(false); // Reseta o estado de documento salvo
+    setTextoDocumento('');
+    setIsDisabled(false);
+    setIsTextAreaDisabled(false);
+    setMostrarFormulario(true); 
+    setDocumentoSalvo(false); 
   };
 
   return (
@@ -72,14 +82,14 @@ function Assinar() {
                 value={textoDocumento}
                 onChange={(e) => setTextoDocumento(e.target.value)}
                 style={styles.textArea}
-                disabled={isTextAreaDisabled} // Desabilita o campo de texto quando necessário
+                disabled={isTextAreaDisabled} 
               />
             </Form.Group>
             <Button
               variant="secondary"
               onClick={salvarDocumentos}
               style={styles.viewButton}
-              disabled={isDisabled} // Desabilita o botão de salvar
+              disabled={isDisabled} 
             >
               Salvar
             </Button>
@@ -92,10 +102,13 @@ function Assinar() {
               Documento salvo:
             </p>
             <p style={{ marginTop: '10px', marginBottom: '10px' }}>
-            <span style={{ fontWeight:'bold' }}>Id:</span> {id_documento}
+              <span style={{ fontWeight: 'bold' }}>Id:</span> {id_documento}
             </p>
             <p style={{ marginTop: '10px', marginBottom: '10px' }}>
-              <span style={{ fontWeight:'bold' }}>Texto:</span> {textoDocumento}
+              <span style={{ fontWeight: 'bold' }}>Texto:</span> {textoDocumento}
+            </p>
+            <p style={{ marginTop: '10px', marginBottom: '10px' }}>
+              <span style={{ fontWeight: 'bold' }}>Dono do Documento:</span> {donoDocumento}
             </p>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Button
