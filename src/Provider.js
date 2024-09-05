@@ -15,7 +15,7 @@ export const AppProvider = ({ children }) => {
         console.log('Usuário carregado do localStorage:', usuario);
 
     }, []);
-    
+
     const salvarUsuarioNoLocalStorage = (usuario) => {
         localStorage.setItem('usuarioLogado', JSON.stringify(usuario));
     };
@@ -87,19 +87,47 @@ export const AppProvider = ({ children }) => {
     async function gerarAssinatura(idDocumento, idUsuario, text) {
         try {
             const hash = await gerarHash(text);
+            const privateKey = await buscarChave(idUsuario);
+
+            if (!privateKey) {
+                throw new Error('Chave privada não encontrada ou inválida');
+            }
+
+            const textBuffer = new TextEncoder().encode(text);
+
+            let signature = await window.crypto.subtle.sign(
+                {
+                    name: "RSA-PSS",
+                    saltLength: 32,
+                },
+                privateKey,
+                textBuffer
+            );
+
+            console.log('Assinatura gerada:', new Uint8Array(signature));
+
             const { data, error } = await supabase
                 .from('assinaturas')
-                .insert([{ id_documento: idDocumento, id_usuario: idUsuario, assinatura_hash: hash }]);
+                .insert([
+                    {
+                        id_documento: idDocumento,
+                        id_usuario: idUsuario,
+                        assinatura_hash: hash,
+                    },
+                ]);
+
             if (error) {
                 console.error('Erro ao inserir a assinatura:', error.message || error);
                 return null;
             }
+
             return data;
         } catch (error) {
             console.error('Erro ao gerar a assinatura:', error.message || error);
             return null;
         }
     }
+
 
     async function gerarChaves(idUsuario) {
         try {
@@ -182,10 +210,93 @@ export const AppProvider = ({ children }) => {
             return null;
         }
     }
+async function buscarChave(idUsuario) {
+    try {
+        const { data, error } = await supabase
+            .from('usuarios')
+            .select('chave_privada')
+            .eq('id_usuario', idUsuario);
 
-    return (
-        <AppContext.Provider value={{ login,cadastrarUsuario,usuarioLogado, gerarHash, gerarAssinatura, gerarChaves, listarDocumentosAssinados, listarDocumentosNaoAssinados }}>
+        if (error || !data.length) {
+            console.error('Erro ao buscar chaves', error);
+            return null;
+        }
+
+        const chavePrivadaBase64 = data[0].chave_privada;
+        const chavePrivadaBuffer = Uint8Array.from(atob(chavePrivadaBase64), c => c.charCodeAt(0)).buffer;
+
+        const privateKey = await window.crypto.subtle.importKey(
+            'pkcs8',
+            chavePrivadaBuffer,
+            {
+                name: 'RSA-PSS',
+                hash: { name: 'SHA-256' }
+            },
+            true,
+            ['sign']
+        );
+
+        return privateKey;
+    } catch (error) {
+        console.error('Erro ao importar chave privada', error.message || error);
+        return null;
+    }
+}
+async function cadastrarUsuario(nome, email, senha) {
+    try {
+        const hashedPassword = await hashPassword(senha);
+
+        const { data, error } = await supabase
+            .from('usuarios')
+            .insert([{ nome_usuario: nome, email: email, senha: hashedPassword }]);
+
+        if (error) {
+            console.error('Erro ao cadastrar o usuário:', error.message || error);
+            return { error: 'Erro ao cadastrar o usuário. Tente novamente.' };
+        }
+
+        return { success: 'Usuário cadastrado com sucesso!' };
+    } catch (error) {
+        console.error('Erro no processo de cadastro:', error.message || error);
+        return { error: 'Erro no processo de cadastro. Tente novamente.' };
+    }
+}
+
+async function login(email, password) {
+    try {
+        const { data: usuario, error: fetchError } = await supabase
+            .from('usuarios')
+            .select('id_usuario, nome_usuario, senha')
+            .eq('email', email)
+            .single();
+
+        if (fetchError || !usuario) {
+            return { error: 'Usuário não encontrado.' };
+        }
+
+        const isPasswordCorrect = bcrypt.compareSync(password, usuario.senha);
+
+        if (!isPasswordCorrect) {
+            return { error: 'Senha incorreta.' };
+        }
+
+        setUsuarioLogado(usuario);
+        salvarUsuarioNoLocalStorage(usuario); // Salva no localStorage
+
+        return { success: true, usuario };
+    } catch (error) {
+        console.error('Erro durante o login:', error);
+        return { error: 'Erro durante o login. Tente novamente.' };
+    }
+}
+async function hashPassword(password) {
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+    return hash;
+}
+return (
+        <AppContext.Provider value={{ login, cadastrarUsuario, usuarioLogado, gerarHash, gerarAssinatura, gerarChaves, listarDocumentosAssinados, listarDocumentosNaoAssinados }}>
             {children}
         </AppContext.Provider>
-    );
+        );
 };
