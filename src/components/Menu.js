@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../Provider';
-import { FaHome, FaFileAlt, FaSignOutAlt, FaKey, FaSignature } from 'react-icons/fa'; 
+import { FaFileAlt, FaSignOutAlt, FaKey, FaSignature } from 'react-icons/fa'; 
 
 function Menu({ setActiveScreen }) {
   const { usuarioLogado } = useContext(AppContext);

@@ -20,7 +20,6 @@ function GerarChaves() {
     <Container fluid style={styles.container}>
       <Row className="justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
         <Col md={6} lg={4} style={styles.gerarChavesBox}>
-          {/* Título estilizado com ícone */}
           <h3 style={styles.title}><FaKey style={styles.icon} /> Gerar Chaves</h3>
           <Button
             onClick={handleGerarChaves}
@@ -39,11 +38,8 @@ function GerarChaves() {
 const styles = {
   container: {
     backgroundColor: '#E3F2FD',
-    // width: '100vw',
-    // height: '100vh',
     display: 'flex',
     justifyContent: 'center',
-    // alignItems: 'center',
   },
   gerarChavesBox: {
     backgroundColor: '#ffffff',
@@ -53,7 +49,7 @@ const styles = {
     textAlign: 'center',
     width: '100%',
     maxWidth: '400px',
-    transition: 'transform 0.3s', // Adiciona uma animação suave
+    transition: 'transform 0.3s',
   },
   title: {
     color: '#3282F6',
@@ -67,7 +63,7 @@ const styles = {
     justifyContent: 'center',
   },
   icon: {
-    marginRight: '10px', // Espaçamento entre o ícone e o texto
+    marginRight: '10px',
   },
   gerarButton: {
     backgroundColor: '#55a6ed',

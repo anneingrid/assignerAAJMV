@@ -75,7 +75,7 @@ export const AppProvider = ({ children }) => {
             }
 
             setUsuarioLogado(usuario);
-            salvarUsuarioNoLocalStorage(usuario); // Salva no localStorage
+            salvarUsuarioNoLocalStorage(usuario);
 
             return { success: true, usuario };
         } catch (error) {
@@ -262,7 +262,7 @@ export const AppProvider = ({ children }) => {
                 return null;
             }
             if (data && data.length > 0) {
-                const idDocumento = data[0].id_documento; // Acessa o id_documento do primeiro item
+                const idDocumento = data[0].id_documento;
                 return idDocumento;
             } else {
                 console.error('Nenhum dado foi retornado após salvar o documento.');
