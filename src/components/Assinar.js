@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Container, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Modal from './Modal';
 import { AppContext } from '../Provider';
 
@@ -16,36 +17,61 @@ function Assinar() {
   const [id_documento, setId_documento] = useState('');
   const [donoDocumento, setDonoDocumento] = useState(''); 
 
+  const showSuccessMessage = (message) => {
+    toast.success(message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  };
+
+  const showErrorMessage = (message) => {
+    toast.error(message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  };
+
   const assinarDocumento = () => {
     if (textoDocumento.trim() === '') {
-      alert('O texto do documento não pode estar vazio.');
+      showErrorMessage('O texto do documento não pode estar vazio.');
       return;
     }
-    alert(`Documento assinado com sucesso!\nTexto do documento: ${textoDocumento}`);
+    showSuccessMessage(`Documento assinado com sucesso!\nTexto do documento: ${textoDocumento}`);
     gerarAssinatura(id_documento, usuarioLogado.id_usuario, textoDocumento);
   };
 
   const salvarDocumentos = async () => {
     if (textoDocumento.trim() === '') {
-      alert('O texto do documento não pode estar vazio.');
+      showErrorMessage('O texto do documento não pode estar vazio.');
       return;
     }
     try {
-      alert(`Documento salvo com sucesso!\nTexto do documento: ${textoDocumento}`);
       const idDocumento = await salvarDocumento(usuarioLogado.id_usuario, textoDocumento);
 
       if (idDocumento) {
         setId_documento(idDocumento);
-        setDonoDocumento(usuarioLogado.nome_usuario   || usuarioLogado.id_usuario); 
+        setDonoDocumento(usuarioLogado.nome_usuario || usuarioLogado.id_usuario); 
         setDocumentoSalvo(true);
         setIsDisabled(true);
         setIsTextAreaDisabled(true);
-        setMostrarFormulario(false); 
+        setMostrarFormulario(false);
+        showSuccessMessage(`Documento salvo com sucesso!\nTexto do documento: ${textoDocumento}`);
       } else {
         console.error('Erro ao obter ID do documento.');
       }
     } catch (error) {
       console.error('Erro ao salvar documento:', error.message || error);
+      showErrorMessage('Erro ao salvar documento.');
     }
   };
 
@@ -53,8 +79,8 @@ function Assinar() {
     setTextoDocumento('');
     setIsDisabled(false);
     setIsTextAreaDisabled(false);
-    setMostrarFormulario(true); 
-    setDocumentoSalvo(false); 
+    setMostrarFormulario(true);
+    setDocumentoSalvo(false);
   };
 
   return (
@@ -82,14 +108,14 @@ function Assinar() {
                 value={textoDocumento}
                 onChange={(e) => setTextoDocumento(e.target.value)}
                 style={styles.textArea}
-                disabled={isTextAreaDisabled} 
+                disabled={isTextAreaDisabled}
               />
             </Form.Group>
             <Button
               variant="secondary"
               onClick={salvarDocumentos}
               style={styles.viewButton}
-              disabled={isDisabled} 
+              disabled={isDisabled}
             >
               Salvar
             </Button>
@@ -130,12 +156,6 @@ function Assinar() {
         )}
       </div>
 
-      <Modal
-        show={showModal}
-        onClose={() => setShowModal(false)}
-        textoDocumento={textoDocumento}
-        navigateToDocuments={() => navigate('/Documentos')}
-      />
     </Container>
   );
 }
@@ -147,15 +167,13 @@ const styles = {
     color: '#2c3e50',
     borderBottom: '2px solid #3498db',
     paddingBottom: '10px',
-  fontFamily: "Poppins"
-
+    fontFamily: "Poppins"
   },
   textArea: {
     borderRadius: '12px',
     padding: '10px',
     fontSize: '16px',
     resize: 'none',
-
   },
   viewButton: {
     backgroundColor: '#A5D6A7',

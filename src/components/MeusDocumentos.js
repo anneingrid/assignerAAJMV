@@ -1,14 +1,17 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../Provider';
-import { FaFileSignature, FaPen } from 'react-icons/fa';
+import { FaFileSignature, FaPen, FaEye } from 'react-icons/fa';
 import Assinar from './Assinar';
 import { Button, Tab, Tabs } from 'react-bootstrap';
+import { toast } from 'react-toastify';
+import DocumentoModal from './DocumentoModal';
 
 function MeusDocumentos() {
   const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados, verificarAssinatura, gerarAssinatura } = useContext(AppContext);
   const [documentosAssinados, setDocumentosAssinados] = useState([]);
   const [documentosNaoAssinados, setDocumentosNaoAssinados] = useState([]);
-  const [needsUpdate, setNeedsUpdate] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [documentoSelecionado, setDocumentoSelecionado] = useState(null);
 
   useEffect(() => {
     if (usuarioLogado) {
@@ -18,15 +21,43 @@ function MeusDocumentos() {
 
         setDocumentosAssinados(assinados);
         setDocumentosNaoAssinados(naoAssinados);
-        setNeedsUpdate(false);
       }
 
       fetchDocumentos();
     }
-  }, [usuarioLogado, documentosNaoAssinados]);
+  }, [usuarioLogado]);
 
   const handleEmptyField = (field) => {
     return field && field.trim() !== '' ? field : 'Campo vazio';
+  };
+
+  const showSuccessMessage = (message) => {
+    toast.success(message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  };
+
+  const showErrorMessage = (message) => {
+    toast.error(message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  };
+
+  const visualizarDocumento = (documento) => {
+    setDocumentoSelecionado(documento);
+    setShowModal(true);
   };
 
   return (
@@ -60,12 +91,25 @@ function MeusDocumentos() {
                         <Button
                           style={styles.actionButton}
                           onClick={async () => {
-                            const isValid = await verificarAssinatura(documento.id_documento, usuarioLogado.id_usuario);
-                            setNeedsUpdate(true);
-                            alert(isValid ? "Assinatura válida!" : "Assinatura inválida!");
+                            try {
+                              const isValid = await verificarAssinatura(documento.id_documento, usuarioLogado.id_usuario);
+                              if (isValid) {
+                                showSuccessMessage("Assinatura válida!");
+                              } else {
+                                showErrorMessage("Assinatura inválida!");
+                              }
+                            } catch (error) {
+                              showErrorMessage("Erro ao verificar a assinatura.");
+                            }
                           }}
                         >
                           <FaFileSignature style={styles.icon} /> Verificar Assinatura
+                        </Button>
+                        <Button
+                          style={styles.actionButton}
+                          onClick={() => visualizarDocumento(documento)}
+                        >
+                          <FaEye style={styles.icon} /> Visualizar
                         </Button>
                       </td>
                     </tr>
@@ -103,12 +147,21 @@ function MeusDocumentos() {
                         <Button
                           style={styles.actionButton}
                           onClick={async () => {
-                            alert(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
-                            gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
-                            setNeedsUpdate(true);
+                            try {
+                              await gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
+                              showSuccessMessage(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
+                            } catch (error) {
+                              showErrorMessage("Erro ao assinar o documento.");
+                            }
                           }}
                         >
                           <FaPen style={styles.icon} /> Assinar
+                        </Button>
+                        <Button
+                          style={styles.actionButton}
+                          onClick={() => visualizarDocumento(documento)}
+                        >
+                          <FaEye style={styles.icon} /> Visualizar
                         </Button>
                       </td>
                     </tr>
@@ -121,6 +174,12 @@ function MeusDocumentos() {
           )}
         </Tab>
       </Tabs>
+
+      <DocumentoModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        documento={documentoSelecionado}
+      />
     </div>
   );
 }
@@ -135,7 +194,7 @@ const styles = {
     marginLeft: '270px',
     minHeight: '100vh',
     fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
-    fontFamily: "Poppins"
+    fontFamily: "Poppins",
   },
   header: {
     backgroundColor: "rgb(227, 242, 253)",

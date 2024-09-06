@@ -7,7 +7,8 @@ import MeusDocumentos from './components/Documentos';
 import GerarChaves from './components/GerarChaves'; 
 import Assinar from './components/Assinar'; 
 import Documentos from './components/Documentos';
-
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify'; 
 
 
 
@@ -45,6 +46,8 @@ function App() {
             element={isAuthenticated ? <Documentos /> : <Navigate to="/" />}
           />
         </Routes>
+        <ToastContainer /> {/* Coloque o ToastContainer aqui */}
+
       </div>
     </Router>
   );
