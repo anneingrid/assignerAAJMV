@@ -10,7 +10,6 @@ function GerarChaves() {
   useEffect(() => {
     const verificarChave = async () => {
       const retorno = await gerarChaves(usuarioLogado.id_usuario);
-      console.log(usuarioLogado)
       if (retorno === 'erro') {
         setChaveGerada(true);   
         

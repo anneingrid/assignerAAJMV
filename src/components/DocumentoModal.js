@@ -11,7 +11,6 @@ const DocumentoModal = ({ show, onHide, documento }) => {
     return new Date(date).toLocaleString();
   };
 
-  console.log(documento);
 
   return (
     <Modal show={show} onHide={onHide}>

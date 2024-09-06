@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { supabase } from './ConexaoBd';
 import bcrypt from 'bcryptjs';
-
+import forge from 'node-forge';
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
@@ -53,39 +53,39 @@ export const AppProvider = ({ children }) => {
                 .select('*')
                 .eq('nome_usuario', nome)
                 .single();
-    
+
             if (nomeExistente) {
                 return { error: 'Nome de usuário já está em uso. Escolha outro.' };
             }
-    
+
             const { data: emailExistente } = await supabase
                 .from('usuarios')
                 .select('*')
                 .eq('email', email)
                 .single();
-    
+
             if (emailExistente) {
                 return { error: 'E-mail já está em uso. Escolha outro.' };
             }
-    
+
             const hashedPassword = await hashPassword(senha);
             const { data, error } = await supabase
                 .from('usuarios')
                 .insert([{ nome_usuario: nome, email: email, senha: hashedPassword }]);
-    
+
             if (error) {
                 console.error('Erro ao cadastrar o usuário:', error.message || error);
                 return { error: 'Erro ao cadastrar o usuário. Tente novamente.' };
             }
-    
+
             return { success: 'Usuário cadastrado com sucesso!' };
         } catch (error) {
             console.error('Erro no processo de cadastro:', error.message || error);
             return { error: 'Erro no processo de cadastro. Tente novamente.' };
         }
     };
-    
-    
+
+
 
     const login = async (email, password) => {
         try {
@@ -94,21 +94,21 @@ export const AppProvider = ({ children }) => {
                 .select('id_usuario, nome_usuario, senha')
                 .eq('email', email)
                 .single();
-    
+
             if (fetchError || !usuario) {
                 localStorage.removeItem('usuarioLogado');
                 return { error: 'Usuário não encontrado.' };
             }
-    
+
             const isPasswordCorrect = bcrypt.compareSync(password, usuario.senha);
-    
+
             if (!isPasswordCorrect) {
                 return { error: 'Senha incorreta.' };
             }
-    
+
             setUsuarioLogado(usuario);
             salvarUsuarioNoLocalStorage(usuario);
-    
+
             return { success: true, usuario };
         } catch (error) {
             console.error('Erro durante o login:', error.message || error);
@@ -116,41 +116,38 @@ export const AppProvider = ({ children }) => {
             return { error: 'Erro durante o login. Tente novamente.' };
         }
     };
-    
+
     const logout = () => {
         setUsuarioLogado(null);
         localStorage.removeItem('usuarioLogado');
-      };
-    
-      
+    };
+
+
     const gerarAssinatura = async (idDocumento, idUsuario, text) => {
         try {
-            const hash = await gerarHash(text);
-            const privateKey = await buscarChave(idUsuario);
+            const privateKeyPem = await buscarChave(idUsuario);
 
-            if (!privateKey) {
+            if (!privateKeyPem) {
                 throw new Error('Chave privada não encontrada ou inválida');
             }
-            
-            const enc = new TextEncoder().encode(text);
-            const signature = await window.crypto.subtle.sign(
-                {
-                    name: "RSA-PSS",
-                    saltLength: 32
-                },
-                privateKey,
-                enc
-            );
 
-            const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+            const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+            const md = forge.md.sha512.create();
+            md.update(text, 'utf8');
+            const signature = privateKey.sign(md);
+console.log(forge.util.encode64(signature))
+
+            const now = new Date();
+            const localTime = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
             const { data, error } = await supabase
                 .from('assinaturas')
                 .insert([{
                     id_documento: idDocumento,
                     id_usuario: idUsuario,
-                    assinatura_hash: hash,
-                    assinatura: signature
+                    assinatura_hash: md.digest().toHex(),
+                    assinatura: forge.util.encode64(signature),
+                    assinado_em: localTime
                 }]);
 
             if (error) {
@@ -165,54 +162,42 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+
+
+
+
     const gerarChaves = async (idUsuario) => {
         try {
+            const { data: buscaUsuario, error: erroBuscaUsuario } = await supabase
+                .from('usuarios')
+                .select('chave_privada, chave_publica')
+                .eq('id_usuario', idUsuario);
 
-            const mensagemDeErro = 'erro'
 
-            const { data: buscaUsuario, erro:erroBuscaUsuario } = await supabase
-            .from('usuarios')
-            .select('chave_privada, chave_publica')
-            .eq('id_usuario', idUsuario);
 
-            if (buscaUsuario[0].chave_privada && buscaUsuario[0].chave_publica){
-                return mensagemDeErro;
-            } 
-            else {
-                const keyPair = await window.crypto.subtle.generateKey(
-                    {
-                        name: "RSA-PSS",
-                        modulusLength: 2048,
-                        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-                        hash: "SHA-512"
-                    },
-                    true,
-                    ["sign", "verify"]
-                );
-    
-                const publicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
-                const privateKey = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-    
-                const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
-                const privateKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(privateKey)));
-    
-                const { data, error } = await supabase
-                    .from('usuarios')
-                    .update({ chave_publica: publicKeyBase64, chave_privada: privateKeyBase64 })
-                    .match({ id_usuario: idUsuario });
-    
-                if (error) {
-                    console.error('Erro ao armazenar as chaves:', error.message || error);
-                    return null;
-                }
-                
-                return data;
+            const keyPair = forge.pki.rsa.generateKeyPair({ bits: 2048, e: 0x10001 });
+
+            const privateKeyPem = forge.pki.privateKeyToPem(keyPair.privateKey);
+            const publicKeyPem = forge.pki.publicKeyToPem(keyPair.publicKey);
+
+            const { data, error } = await supabase
+                .from('usuarios')
+                .update({ chave_publica: publicKeyPem, chave_privada: privateKeyPem })
+                .match({ id_usuario: idUsuario });
+
+            if (error) {
+                console.error('Erro ao armazenar as chaves:', error.message || error);
+                return null;
             }
+
+            return data;
+
         } catch (error) {
             console.error('Erro ao gerar o par de chaves:', error.message || error);
             return null;
         }
     };
+
 
     const listarDocumentosAssinados = async (idUsuario) => {
         try {
@@ -254,11 +239,11 @@ export const AppProvider = ({ children }) => {
                 console.error("Erro ao buscar assinaturas:", erroAssinaturas);
                 return [];
             }
-    
+
             const idDocumentosAssinados = assinaturas.map(assinatura => assinatura.id_documento);
-    
+
             const documentosNaoAssinados = documentos.filter(doc => !idDocumentosAssinados.includes(doc.id_documento));
-    
+
             return documentosNaoAssinados;
         } catch (error) {
             console.error('Erro ao listar documentos não assinados:', error.message || error);
@@ -278,23 +263,16 @@ export const AppProvider = ({ children }) => {
                 return null;
             }
 
-            const chavePrivadaBase64 = data[0].chave_privada;
-            const chavePrivadaBuffer = base64ToArrayBuffer(chavePrivadaBase64);
-
-            const privateKey = await window.crypto.subtle.importKey(
-                'pkcs8',
-                chavePrivadaBuffer,
-                { name: 'RSA-PSS', hash: { name: 'SHA-256' } },
-                true,
-                ['sign']
-            );
-
+            const privateKey = (data[0].chave_privada);
+            console.log(privateKey);
             return privateKey;
         } catch (error) {
-            console.error('Erro ao importar chave privada', error.message || error);
+            console.error('Erro ao buscar chave privada', error.message || error);
             return null;
         }
     };
+
+
 
     const buscarChavePublica = async (idUsuario) => {
         try {
@@ -304,21 +282,11 @@ export const AppProvider = ({ children }) => {
                 .eq('id_usuario', idUsuario);
 
             if (error || !data.length) {
-                console.error('Erro ao buscar chaves', error);
+                console.error('Erro ao buscar chave pública', error);
                 return null;
             }
 
-            const chavePublicaBase64 = data[0].chave_publica;
-            const chavePublicaBuffer = base64ToArrayBuffer(chavePublicaBase64);
-
-            const publicKey = await window.crypto.subtle.importKey(
-                'spki',
-                chavePublicaBuffer,
-                { name: 'RSA-PSS', hash: { name: 'SHA-256' } },
-                true,
-                ['verify']
-            );
-
+            const publicKey = (data[0].chave_publica);
             return publicKey;
         } catch (error) {
             console.error('Erro ao importar chave pública', error.message || error);
@@ -327,11 +295,22 @@ export const AppProvider = ({ children }) => {
     };
 
     const salvarDocumento = async (idUsuario, text) => {
-        const hash = await gerarHash(text);
+        const hash = forge.md.sha512.create();
+        hash.update(text);
+        const hashHex = hash.digest().toHex();
+
         try {
+            const now = new Date();
+            const localTime = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
             const { data, error } = await supabase
                 .from('documentos')
-                .insert([{ id_usuario: idUsuario, mensagem_documento: text, documento_hash: hash }])
+                .insert([{
+                    id_usuario: idUsuario,
+                    mensagem_documento: text,
+                    documento_hash: hashHex,
+                    criado_em: localTime
+                }])
                 .select();
 
             if (error) {
@@ -355,7 +334,7 @@ export const AppProvider = ({ children }) => {
         try {
             const { data: assinaturaData, error: assinaturaError } = await supabase
                 .from('assinaturas')
-                .select('assinatura, assinatura_hash, documentos(documento_hash)')
+                .select('assinatura, assinatura_hash, documentos(*)')
                 .eq('id_documento', id_documento)
                 .eq('id_usuario', id_usuario)
                 .single();
@@ -364,27 +343,33 @@ export const AppProvider = ({ children }) => {
                 console.error("Erro ao buscar assinatura:", assinaturaError);
                 return false;
             }
-
-            const signatureBase64 = assinaturaData.assinatura;
-            const documentoHash = assinaturaData.documentos.mensagem_documento;
-            const publicKey = await buscarChavePublica(id_usuario);
-
-            if (!publicKey) {
-                console.error("Erro ao importar a chave pública.");
+            
+            const texto = assinaturaData.documentos.mensagem_documento;
+            const signature = assinaturaData.assinatura;
+            console.log(signature)
+            const assinaturaHash = assinaturaData.assinatura_hash;
+            const publicKeyPem = await buscarChavePublica(id_usuario);
+            
+            if (!publicKeyPem) {
+                console.error("Erro ao buscar chave pública.");
                 return false;
             }
-          
-            const encoded = new TextEncoder().encode(documentoHash);
-            const signatureArrayBuffer = base64ToArrayBuffer(signatureBase64);
+            const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+            const md = forge.md.sha512.create();
+            md.update(texto, 'utf8');
+            const digestHex = md.digest().toHex();
 
-            const result = await window.crypto.subtle.verify(
-                { name: "RSA-PSS", saltLength: 32 },
-                publicKey,
-                signatureBase64,
-                encoded
-            );
+            if (digestHex !== assinaturaHash) {
+                console.error("Hash do documento não corresponde ao hash da assinatura.");
+                return false;
+            }
+            const decodedSignature = forge.util.decode64(signature);
+            console.log(decodedSignature);
+            const verified = publicKey.verify(md.digest().bytes(), decodedSignature);
 
-            return result;
+            console.log("Resultado da verificação:", verified);
+            return verified;
+
         } catch (error) {
             console.error('Erro ao verificar assinatura:', error.message || error);
             return false;
@@ -412,22 +397,22 @@ export const AppProvider = ({ children }) => {
         try {
             const { data: documentos, error: erroDocumentos } = await supabase
                 .from('documentos')
-                .select('id_documento, mensagem_documento, criado_em, usuarios (nome_usuario)');     
+                .select('id_documento, mensagem_documento, criado_em, usuarios (nome_usuario)');
             if (erroDocumentos) {
                 console.error("Erro ao buscar documentos:", erroDocumentos);
                 return [];
             }
-    
+
             const { data: assinaturas, error: erroAssinaturas } = await supabase
                 .from('assinaturas')
                 .select('id_documento');
-            
+
             if (erroAssinaturas) {
                 console.error("Erro ao buscar assinaturas:", erroAssinaturas);
                 return [];
             }
 
-            
+
 
             const idDocumentoAssinaturas = assinaturas.map(doc => doc.id_documento);
             const documentosNaoAssinados = documentos.filter(doc => !idDocumentoAssinaturas.includes(doc.id_documento));
