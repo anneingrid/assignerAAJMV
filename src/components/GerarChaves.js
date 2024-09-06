@@ -1,21 +1,33 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Button, Container, Row, Col } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 import { FaKey } from 'react-icons/fa';
 import { AppContext } from '../Provider';
 
 function GerarChaves() {
   const { gerarChaves, usuarioLogado } = useContext(AppContext);
+  const [chaveGerada, setChaveGerada] = useState(false); 
+
+  useEffect(() => {
+    const verificarChave = async () => {
+      const retorno = await gerarChaves(usuarioLogado.id_usuario);
+      console.log(usuarioLogado)
+      if (retorno === 'erro') {
+        setChaveGerada(true);   
+        
+      }
+    };
+
+    verificarChave();
+  }, [gerarChaves, usuarioLogado]);
 
   const handleGerarChaves = async () => {
     const retorno = await gerarChaves(usuarioLogado.id_usuario);
-    
-    if (retorno == 'erro') {
-      alert(`Já tem uma chave cadastrada!!`);
+
+    if (retorno === 'erro') {
+      setChaveGerada(true); 
+    } else {
+      alert('Chaves Geradas com sucesso!');
     }
-    else {
-      alert(`Chaves Geradas com sucesso!`);
-    }    
   };
 
   return (
@@ -23,12 +35,17 @@ function GerarChaves() {
       <Row className="justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
         <Col md={6} lg={4} style={styles.gerarChavesBox}>
           <h3 style={styles.title}><FaKey style={styles.icon} /> Gerar Chaves</h3>
-          <Button
-            onClick={handleGerarChaves}
-            variant="primary"
-            style={styles.gerarButton}>
-            Gerar
-          </Button>
+          
+          {chaveGerada ? (
+            <p>Chave já gerada para o usuário.</p> 
+          ) : (
+            <Button
+              onClick={handleGerarChaves}
+              variant="primary"
+              style={styles.gerarButton}>
+              Gerar
+            </Button>
+          )}
         </Col>
       </Row>
     </Container>
@@ -38,11 +55,8 @@ function GerarChaves() {
 const styles = {
   container: {
     backgroundColor: '#E3F2FD',
-    // width: '100vw',
-    // height: '100vh',
     display: 'flex',
     justifyContent: 'center',
-    // alignItems: 'center',
     fontFamily: "Poppins"
   },
   gerarChavesBox: {
@@ -53,7 +67,7 @@ const styles = {
     textAlign: 'center',
     width: '100%',
     maxWidth: '400px',
-    transition: 'transform 0.3s', // Adiciona uma animação suave
+    transition: 'transform 0.3s',
   },
   title: {
     color: '#3282F6',
@@ -67,7 +81,7 @@ const styles = {
     justifyContent: 'center',
   },
   icon: {
-    marginRight: '10px', // Espaçamento entre o ícone e o texto
+    marginRight: '10px',
   },
   gerarButton: {
     backgroundColor: '#55a6ed',
