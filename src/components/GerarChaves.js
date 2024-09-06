@@ -9,16 +9,22 @@ function GerarChaves() {
 
   useEffect(() => {
     const verificarChave = async () => {
-      const retorno = await gerarChaves(usuarioLogado.id_usuario);
-      console.log(usuarioLogado)
-      if (retorno === 'erro') {
-        setChaveGerada(true);   
-        
+      if (usuarioLogado && usuarioLogado.id_usuario) {
+        const retorno = await gerarChaves(usuarioLogado.id_usuario);
+        console.log(usuarioLogado);
+  
+        if (retorno === 'erro') {
+          setChaveGerada(true);
+        }
+      } else {
+        console.error("Usuário não logado ou id_usuario não disponível.");
       }
     };
-
+  
     verificarChave();
   }, [gerarChaves, usuarioLogado]);
+  
+
 
   const handleGerarChaves = async () => {
     const retorno = await gerarChaves(usuarioLogado.id_usuario);
