@@ -5,29 +5,28 @@ import { FaKey } from 'react-icons/fa';
 import { AppContext } from '../Provider';
 
 function GerarChaves() {
-  const navigate = useNavigate();
   const { gerarChaves, usuarioLogado } = useContext(AppContext);
 
-
-  const handleGerarChaves = () => {
-
-    gerarChaves(usuarioLogado.id_usuario);
-    alert(`Chaves Geradas com sucesso!`);
+  const handleGerarChaves = async () => {
+    const retorno = await gerarChaves(usuarioLogado.id_usuario);
     
+    if (retorno == 'erro') {
+      alert(`Já tem uma chave cadastrada!!`);
+    }
+    else {
+      alert(`Chaves Geradas com sucesso!`);
+    }    
   };
 
   return (
     <Container fluid style={styles.container}>
       <Row className="justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
         <Col md={6} lg={4} style={styles.gerarChavesBox}>
-          {/* Título estilizado com ícone */}
           <h3 style={styles.title}><FaKey style={styles.icon} /> Gerar Chaves</h3>
           <Button
             onClick={handleGerarChaves}
             variant="primary"
-            style={styles.gerarButton}
-          
-          >
+            style={styles.gerarButton}>
             Gerar
           </Button>
         </Col>

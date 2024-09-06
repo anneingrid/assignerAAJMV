@@ -4,26 +4,26 @@ import { FaFileSignature, FaPen, FaEye } from 'react-icons/fa';
 import { Button } from 'react-bootstrap';
 
 function Documentos() {
-  const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados, verificarAssinatura, gerarAssinatura } = useContext(AppContext);
-  const [documentosAssinados, setDocumentosAssinados] = useState([]);
-  const [documentosNaoAssinados, setDocumentosNaoAssinados] = useState([]);
+  const { usuarioLogado, listarTodosDocumentosAssinados, listarTodosDocumentosNaoAssinados, verificarAssinatura } = useContext(AppContext);
+  const [todosDocumentosAssinados, setListarTodosDocumentosAssinados] = useState([]);
+  const [todosDocumentosNaoAssinados, setListarTodosDocumentosNaoAssinados] = useState([]);
   const [needsUpdate, setNeedsUpdate] = useState(false);
+
   useEffect(() => {
     if (usuarioLogado) {
       async function fetchDocumentos() {
-        const assinados = await listarDocumentosAssinados(usuarioLogado.id_usuario);
-        const naoAssinados = await listarDocumentosNaoAssinados(usuarioLogado.id_usuario);
+        const assinados = await listarTodosDocumentosAssinados();
+        const naoAssinados = await listarTodosDocumentosNaoAssinados();
 
-        setDocumentosAssinados(assinados);
-        setDocumentosNaoAssinados(naoAssinados);
+        setListarTodosDocumentosAssinados(assinados);
+        setListarTodosDocumentosNaoAssinados(naoAssinados);
         setNeedsUpdate(false);
       }
-
 
       fetchDocumentos();
 
     }
-  }, [usuarioLogado, documentosNaoAssinados]);
+  }, [usuarioLogado, todosDocumentosNaoAssinados, todosDocumentosAssinados]);
 
   const handleEmptyField = (field) => {
     return field && field.trim() !== '' ? field : 'Campo vazio';
@@ -39,7 +39,7 @@ function Documentos() {
         textAlign:'center'
         }}>Todos os documentos</h1>
       <h2 style={styles.title}>Assinados</h2>
-      {documentosAssinados.length > 0 ? (
+      {todosDocumentosAssinados.length > 0 ? (
         <div style={styles.tableContainer}>
           <table style={styles.table}>
             <thead>
@@ -52,7 +52,7 @@ function Documentos() {
               </tr>
             </thead>
             <tbody>
-              {documentosAssinados.map((documento) => (
+              {todosDocumentosAssinados.map((documento) => (
 
                 <tr key={documento.id_documento} style={styles.tableRow}>
                   <td style={{
@@ -70,7 +70,7 @@ function Documentos() {
                   <td>
                     <span style={{ ...styles.status, backgroundColor: '#A5D6A7' }}>Assinado</span>
                   </td>
-                  <td>{usuarioLogado.nome_usuario}</td>
+                  <td>{documento.usuarios.nome_usuario}</td>
                   <td>
                     <Button
                       style={styles.actionButton}
@@ -97,7 +97,7 @@ function Documentos() {
       )}
 
       <h2 style={styles.title}>Não Assinados</h2>
-      {documentosNaoAssinados.length > 0 ? (
+      {todosDocumentosNaoAssinados.length > 0 ? (
         <div style={styles.tableContainer}>
           <table style={styles.table}>
             <thead>
@@ -110,7 +110,7 @@ function Documentos() {
               </tr>
             </thead>
             <tbody>
-              {documentosNaoAssinados.map((documento) => (
+              {todosDocumentosNaoAssinados.map((documento) => (
                 <tr key={documento.id_documento} style={styles.tableRow}>
                   <td style={{
                     maxWidth: '100px',
@@ -127,7 +127,7 @@ function Documentos() {
                   <td>
                     <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
                   </td>
-                  <td>{usuarioLogado.nome_usuario}</td>
+                  <td>{documento.usuarios.nome_usuario}</td>
                   
                 </tr>
               ))}

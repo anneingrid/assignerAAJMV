@@ -137,34 +137,47 @@ export const AppProvider = ({ children }) => {
 
     const gerarChaves = async (idUsuario) => {
         try {
-            const keyPair = await window.crypto.subtle.generateKey(
-                {
-                    name: "RSA-PSS",
-                    modulusLength: 2048,
-                    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-                    hash: "SHA-512"
-                },
-                true,
-                ["sign", "verify"]
-            );
 
-            const publicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
-            const privateKey = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+            const mensagemDeErro = 'erro'
 
-            const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
-            const privateKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(privateKey)));
+            const { data: buscaUsuario, erro:erroBuscaUsuario } = await supabase
+            .from('usuarios')
+            .select('chave_privada, chave_publica')
+            .eq('id_usuario', idUsuario);
 
-            const { data, error } = await supabase
-                .from('usuarios')
-                .update({ chave_publica: publicKeyBase64, chave_privada: privateKeyBase64 })
-                .match({ id_usuario: idUsuario });
-
-            if (error) {
-                console.error('Erro ao armazenar as chaves:', error.message || error);
-                return null;
+            if (buscaUsuario[0].chave_privada && buscaUsuario[0].chave_publica){
+                return mensagemDeErro;
+            } 
+            else {
+                const keyPair = await window.crypto.subtle.generateKey(
+                    {
+                        name: "RSA-PSS",
+                        modulusLength: 2048,
+                        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+                        hash: "SHA-512"
+                    },
+                    true,
+                    ["sign", "verify"]
+                );
+    
+                const publicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+                const privateKey = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+    
+                const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
+                const privateKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(privateKey)));
+    
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .update({ chave_publica: publicKeyBase64, chave_privada: privateKeyBase64 })
+                    .match({ id_usuario: idUsuario });
+    
+                if (error) {
+                    console.error('Erro ao armazenar as chaves:', error.message || error);
+                    return null;
+                }
+                
+                return data;
             }
-
-            return data;
         } catch (error) {
             console.error('Erro ao gerar o par de chaves:', error.message || error);
             return null;
@@ -347,6 +360,59 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    const listarTodosDocumentosAssinados = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('assinaturas')
+                .select('*, usuarios(*), documentos (*)')
+
+            if (error) {
+                console.error("Erro ao buscar documentos assinados:", error);
+                return [];
+            }
+            return data;
+        } catch (error) {
+            console.error('Erro ao listar documentos assinados:', error.message || error);
+            return null;
+        }
+    };
+
+    const listarTodosDocumentosNaoAssinados = async () => {
+        try {
+            const { data: documentos, error: erroDocumentos } = await supabase
+                .from('documentos')
+                .select('*,  usuarios(*)')
+
+
+            if (erroDocumentos) {
+                console.error("Erro ao buscar documentos:", erroDocumentos);
+                return [];
+            }
+
+            const { data: assinaturas, error: erroAssinaturas } = await supabase
+            .from('assinaturas')
+            .select('*');
+
+
+            if (erroAssinaturas) {
+                console.error("Erro ao buscar assinaturas:", erroAssinaturas);
+                return [];
+            }
+
+            
+
+            const idDocumentoAssinaturas = assinaturas.map(doc => doc.id_documento);
+            const documentosNaoAssinados = documentos.filter(doc => !idDocumentoAssinaturas.includes(doc.id_documento));
+            console.log(documentosNaoAssinados)
+            return documentosNaoAssinados;
+        } catch (error) {
+            console.error('Erro ao listar documentos não assinados:', error.message || error);
+            return null;
+        }
+    };
+
+
+
     return (
         <AppContext.Provider value={{
             verificarAssinatura,
@@ -358,7 +424,9 @@ export const AppProvider = ({ children }) => {
             gerarAssinatura,
             gerarChaves,
             listarDocumentosAssinados,
-            listarDocumentosNaoAssinados
+            listarDocumentosNaoAssinados,
+            listarTodosDocumentosAssinados,
+            listarTodosDocumentosNaoAssinados
         }}>
             {children}
         </AppContext.Provider>
