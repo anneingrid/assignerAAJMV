@@ -17,7 +17,7 @@ function Dashboard() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowNavbar(false);
-    }, 5000);
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);

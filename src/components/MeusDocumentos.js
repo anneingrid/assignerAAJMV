@@ -14,19 +14,23 @@ function MeusDocumentos() {
   const [showModal, setShowModal] = useState(false);
   const [documentoSelecionado, setDocumentoSelecionado] = useState(null);
 
-  useEffect(() => {
+  const fetchDocumentos = async () => {
     if (usuarioLogado) {
-      async function fetchDocumentos() {
-        const assinados = await listarDocumentosAssinados(usuarioLogado.id_usuario);
-        const naoAssinados = await listarDocumentosNaoAssinados(usuarioLogado.id_usuario);
+      const assinados = await listarDocumentosAssinados(usuarioLogado.id_usuario);
+      const naoAssinados = await listarDocumentosNaoAssinados(usuarioLogado.id_usuario);
 
-        setDocumentosAssinados(assinados);
-        setDocumentosNaoAssinados(naoAssinados);
-      }
-
-      fetchDocumentos();
+      setDocumentosAssinados(assinados);
+      setDocumentosNaoAssinados(naoAssinados);
     }
+  };
+
+  useEffect(() => {
+    fetchDocumentos();
   }, [usuarioLogado]);
+
+  const atualizarDocumentos = () => {
+    fetchDocumentos();
+  };
 
   const handleEmptyField = (field) => {
     return field && field.trim() !== '' ? field : 'Campo vazio';
@@ -66,8 +70,8 @@ function MeusDocumentos() {
       await gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
       showSuccessMessage(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
       
-      // Adiciona o ID do documento assinado no estado
       setDocumentosAssinadosIds((prev) => [...prev, documento.id_documento]);
+      atualizarDocumentos();
     } catch (error) {
       showErrorMessage("Erro ao assinar o documento.");
     }
@@ -76,7 +80,7 @@ function MeusDocumentos() {
   return (
     <div style={styles.container}>
       <h1 style={styles.header}>Meus Documentos</h1>
-      <Assinar />
+      <Assinar atualizarDocumentos={atualizarDocumentos} />
 
       <Tabs defaultActiveKey="assinados" id="documentos-tabs">
         <Tab eventKey="assinados" title="Assinados">

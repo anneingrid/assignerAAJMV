@@ -4,7 +4,7 @@ import { FaFileAlt, FaFileSignature, FaEye } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Button, Tab, Tabs } from 'react-bootstrap';
-import DocumentoModal from './DocumentoModal'; // Importa o novo componente de modal
+import DocumentoModal from './DocumentoModal';
 
 function Documentos() {
   const { usuarioLogado, listarTodosDocumentosAssinados, listarTodosDocumentosNaoAssinados, verificarAssinatura, gerarAssinatura } = useContext(AppContext);
@@ -13,7 +13,6 @@ function Documentos() {
   const [showModal, setShowModal] = useState(false);
   const [documentoSelecionado, setDocumentoSelecionado] = useState(null);
 
-  // Função para buscar os documentos atualizados
   const fetchDocumentos = async () => {
     try {
       const assinados = await listarTodosDocumentosAssinados(usuarioLogado.id_usuario);
@@ -80,11 +79,9 @@ function Documentos() {
 
   const handleAssinarDocumento = async (documento) => {
     try {
-      // Chama a função de assinatura
       await gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
       showSuccessMessage(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
 
-      // Após assinar, atualiza a listagem de documentos
       await fetchDocumentos();
     } catch (error) {
       showErrorMessage("Erro ao assinar o documento.");

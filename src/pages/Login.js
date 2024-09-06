@@ -2,7 +2,6 @@ import React, { useState, useContext } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { AppContext } from '../Provider';
-import { FaLock } from 'react-icons/fa';
 
 function Login({ setIsAuthenticated }) {
     const [email, setEmail] = useState('');

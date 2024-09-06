@@ -1,21 +1,16 @@
 import React, { useState, useContext } from 'react';
 import { Container, Form, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import Modal from './Modal';
 import { AppContext } from '../Provider';
 
-function Assinar() {
+function Assinar({ atualizarDocumentos }) {
   const { gerarAssinatura, salvarDocumento, usuarioLogado } = useContext(AppContext);
   const [textoDocumento, setTextoDocumento] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [isTextAreaDisabled, setIsTextAreaDisabled] = useState(false);
-  const [isDisabled, setIsDisabled] = useState(true);
-  const [mostrarFormulario, setMostrarFormulario] = useState(false); 
-  const [documentoSalvo, setDocumentoSalvo] = useState(false); 
-  const navigate = useNavigate();
+  const [documentoSalvo, setDocumentoSalvo] = useState(false);
   const [id_documento, setId_documento] = useState('');
-  const [donoDocumento, setDonoDocumento] = useState(''); 
+  const [isTextAreaDisabled, setIsTextAreaDisabled] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   const showSuccessMessage = (message) => {
     toast.success(message, {
@@ -41,37 +36,39 @@ function Assinar() {
     });
   };
 
-  const assinarDocumento = () => {
+  const assinarDocumento = async () => {
     if (textoDocumento.trim() === '') {
       showErrorMessage('O texto do documento não pode estar vazio.');
       return;
     }
-    showSuccessMessage(`Documento assinado com sucesso!\nTexto do documento: ${textoDocumento}`);
-    gerarAssinatura(id_documento, usuarioLogado.id_usuario, textoDocumento);
+    try {
+      await gerarAssinatura(id_documento, usuarioLogado.id_usuario, textoDocumento);
+      showSuccessMessage('Documento assinado com sucesso!');
+      atualizarDocumentos();
+    } catch (error) {
+      showErrorMessage('Erro ao assinar o documento.');
+    }
   };
 
-  const salvarDocumentos = async () => {
+  const salvarDocumentoHandler = async () => {
     if (textoDocumento.trim() === '') {
       showErrorMessage('O texto do documento não pode estar vazio.');
       return;
     }
     try {
       const idDocumento = await salvarDocumento(usuarioLogado.id_usuario, textoDocumento);
-
       if (idDocumento) {
         setId_documento(idDocumento);
-        setDonoDocumento(usuarioLogado.nome_usuario || usuarioLogado.id_usuario); 
         setDocumentoSalvo(true);
         setIsDisabled(true);
         setIsTextAreaDisabled(true);
-        setMostrarFormulario(false);
-        showSuccessMessage(`Documento salvo com sucesso!\nTexto do documento: ${textoDocumento}`);
+        showSuccessMessage('Documento salvo com sucesso!');
+        atualizarDocumentos();
       } else {
-        console.error('Erro ao obter ID do documento.');
+        showErrorMessage('Erro ao salvar o documento.');
       }
     } catch (error) {
-      console.error('Erro ao salvar documento:', error.message || error);
-      showErrorMessage('Erro ao salvar documento.');
+      showErrorMessage('Erro ao salvar o documento.');
     }
   };
 
@@ -113,11 +110,11 @@ function Assinar() {
             </Form.Group>
             <Button
               variant="secondary"
-              onClick={salvarDocumentos}
+              onClick={salvarDocumentoHandler}
               style={styles.viewButton}
               disabled={isDisabled}
             >
-              Salvar
+              Salvar Documento
             </Button>
           </Form>
         )}
@@ -133,16 +130,13 @@ function Assinar() {
             <p style={{ marginTop: '10px', marginBottom: '10px' }}>
               <span style={{ fontWeight: 'bold' }}>Texto:</span> {textoDocumento}
             </p>
-            <p style={{ marginTop: '10px', marginBottom: '10px' }}>
-              <span style={{ fontWeight: 'bold' }}>Dono do Documento:</span> {donoDocumento}
-            </p>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Button
                 variant="primary"
                 onClick={assinarDocumento}
                 style={styles.signButton}
               >
-                Assinar
+                Assinar Documento
               </Button>
               <Button
                 variant="secondary"
@@ -155,7 +149,6 @@ function Assinar() {
           </div>
         )}
       </div>
-
     </Container>
   );
 }
@@ -167,7 +160,7 @@ const styles = {
     color: '#2c3e50',
     borderBottom: '2px solid #3498db',
     paddingBottom: '10px',
-    fontFamily: "Poppins"
+    fontFamily: "Poppins",
   },
   textArea: {
     borderRadius: '12px',
@@ -184,7 +177,7 @@ const styles = {
     margin: '0 5px',
     width: 'auto',
     fontFamily: "Poppins",
-    marginBottom: "20px"
+    marginBottom: "20px",
   },
   signButton: {
     backgroundColor: '#81D4FA',
@@ -194,7 +187,7 @@ const styles = {
     border: 'none',
     margin: '0 5px',
     width: 'auto',
-    fontFamily: "Poppins"
+    fontFamily: "Poppins",
   },
 };
 
