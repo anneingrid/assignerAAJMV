@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { AppContext } from './Provider';
 import Login from './pages/Login';
 import Cadastro from './pages/Cadastro';
 import Principal from './pages/Principal';
@@ -7,13 +8,19 @@ import MeusDocumentos from './components/Documentos';
 import GerarChaves from './components/GerarChaves'; 
 import Assinar from './components/Assinar'; 
 import Documentos from './components/Documentos';
-
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify'; 
 
 
 
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { usuarioLogado, logout } = useContext(AppContext);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!usuarioLogado);
+
+  useEffect(() => {
+    setIsAuthenticated(!!usuarioLogado);
+  }, [usuarioLogado]);
 
   return (
     <Router>
@@ -45,6 +52,8 @@ function App() {
             element={isAuthenticated ? <Documentos /> : <Navigate to="/" />}
           />
         </Routes>
+        <ToastContainer /> {/* Coloque o ToastContainer aqui */}
+
       </div>
     </Router>
   );

@@ -2,13 +2,17 @@ import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../Provider';
 import { FaFileSignature, FaPen, FaEye } from 'react-icons/fa';
 import Assinar from './Assinar';
-import { Button } from 'react-bootstrap';
+import { Button, Tab, Tabs } from 'react-bootstrap';
+import { toast } from 'react-toastify';
+import DocumentoModal from './DocumentoModal';
 
 function MeusDocumentos() {
   const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados, verificarAssinatura, gerarAssinatura } = useContext(AppContext);
   const [documentosAssinados, setDocumentosAssinados] = useState([]);
   const [documentosNaoAssinados, setDocumentosNaoAssinados] = useState([]);
-  const [needsUpdate, setNeedsUpdate] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [documentoSelecionado, setDocumentoSelecionado] = useState(null);
+
   useEffect(() => {
     if (usuarioLogado) {
       async function fetchDocumentos() {
@@ -17,140 +21,165 @@ function MeusDocumentos() {
 
         setDocumentosAssinados(assinados);
         setDocumentosNaoAssinados(naoAssinados);
-        setNeedsUpdate(false);
       }
 
-
       fetchDocumentos();
-
     }
-  }, [usuarioLogado, documentosNaoAssinados]);
+  }, [usuarioLogado]);
 
   const handleEmptyField = (field) => {
     return field && field.trim() !== '' ? field : 'Campo vazio';
   };
 
+  const showSuccessMessage = (message) => {
+    toast.success(message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  };
+
+  const showErrorMessage = (message) => {
+    toast.error(message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  };
+
+  const visualizarDocumento = (documento) => {
+    setDocumentoSelecionado(documento);
+    setShowModal(true);
+  };
+
   return (
     <div style={styles.container}>
-      <h1 style={{backgroundColor:"rgb(227, 242, 253)", 
-        paddingTop:10, 
-        paddingBottom:10, 
-        paddingLeft:2, 
-        borderRadius:20,
-        textAlign:'center'
-        }}>Meus Documentos</h1>
+      <h1 style={styles.header}>Meus Documentos</h1>
       <Assinar />
-      
-      <h2 style={styles.title}>Assinados</h2>
-      {documentosAssinados.length > 0 ? (
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>Texto do Documento</th>
-                <th >Assinado em</th>
-                <th>Status</th>
-                
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documentosAssinados.map((documento) => (
 
-                <tr key={documento.id_documento} style={styles.tableRow}>
-                  <td style={{
-                    maxWidth: '100px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>{handleEmptyField(documento.documentos.mensagem_documento)}</td>
-                  <td style={{
-                    maxWidth: '130px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>{new Date(documento.assinado_em).toLocaleString()}</td>
-                  <td>
-                    <span style={{ ...styles.status, backgroundColor: '#A5D6A7' }}>Assinado</span>
-                  </td>
-                  
-                  <td>
-                    <Button
-                      style={styles.actionButton}
-                      onClick={async () => {
-                        const isValid = await verificarAssinatura(documento.id_documento, usuarioLogado.id_usuario);
-                        setNeedsUpdate(true);
-                        if (isValid) {
-                          alert("Assinatura válida!");
-                        } else {
-                          alert("Assinatura inválida!");
-                        }
-                      }}
-                    >
-                      <FaFileSignature style={styles.icon} /> Verificar Assinatura
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p style={styles.emptyMessage}>Nenhum documento assinado encontrado.</p>
-      )}
+      <Tabs defaultActiveKey="assinados" id="documentos-tabs">
+        <Tab eventKey="assinados" title="Assinados">
+          <h2 style={styles.title}>Assinados</h2>
+          {documentosAssinados.length > 0 ? (
+            <div style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Texto do Documento</th>
+                    <th>Assinado em</th>
+                    <th>Status</th>
+                    <th>Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documentosAssinados.map((documento) => (
+                    <tr key={documento.id_documento} style={styles.tableRow}>
+                      <td style={styles.textoDocumento}>{handleEmptyField(documento.documentos.mensagem_documento)}</td>
+                      <td>{new Date(documento.assinado_em).toLocaleString()}</td>
+                      <td>
+                        <span style={{ ...styles.status, backgroundColor: '#A5D6A7' }}>Assinado</span>
+                      </td>
+                      <td>
+                        <Button
+                          style={styles.actionButton}
+                          onClick={async () => {
+                            try {
+                              const isValid = await verificarAssinatura(documento.id_documento, usuarioLogado.id_usuario);
+                              if (isValid) {
+                                showSuccessMessage("Assinatura válida!");
+                              } else {
+                                showErrorMessage("Assinatura inválida!");
+                              }
+                            } catch (error) {
+                              showErrorMessage("Erro ao verificar a assinatura.");
+                            }
+                          }}
+                        >
+                          <FaFileSignature style={styles.icon} /> Verificar Assinatura
+                        </Button>
+                        <Button
+                          style={styles.actionButton}
+                          onClick={() => visualizarDocumento(documento)}
+                        >
+                          <FaEye style={styles.icon} /> Visualizar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p style={styles.emptyMessage}>Nenhum documento assinado encontrado.</p>
+          )}
+        </Tab>
 
-      <h2 style={styles.title}>Não Assinados</h2>
-      {documentosNaoAssinados.length > 0 ? (
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th >Texto do Documento</th>
-                <th>Data de criação</th>
-                <th>Status</th>
-                
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documentosNaoAssinados.map((documento) => (
-                <tr key={documento.id_documento} style={styles.tableRow}>
-                  <td style={{
-                    maxWidth: '100px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>{handleEmptyField(documento.mensagem_documento)}</td>
-                  <td style={{
-                    maxWidth: '130px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>{new Date(documento.criado_em).toLocaleString()}</td>
-                  <td>
-                    <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
-                  </td>
-               
-                  <td style={{ alignItems: 'center' }}>
+        <Tab eventKey="nao-assinados" title="Não Assinados">
+          <h2 style={styles.title}>Não Assinados</h2>
+          {documentosNaoAssinados.length > 0 ? (
+            <div style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Texto do Documento</th>
+                    <th>Data de criação</th>
+                    <th>Status</th>
+                    <th>Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documentosNaoAssinados.map((documento) => (
+                    <tr key={documento.id_documento} style={styles.tableRow}>
+                      <td style={styles.textoDocumento}>{handleEmptyField(documento.mensagem_documento)}</td>
+                      <td>{new Date(documento.criado_em).toLocaleString()}</td>
+                      <td>
+                        <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
+                      </td>
+                      <td style={{ alignItems: 'center' }}>
+                        <Button
+                          style={styles.actionButton}
+                          onClick={async () => {
+                            try {
+                              await gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
+                              showSuccessMessage(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
+                            } catch (error) {
+                              showErrorMessage("Erro ao assinar o documento.");
+                            }
+                          }}
+                        >
+                          <FaPen style={styles.icon} /> Assinar
+                        </Button>
+                        <Button
+                          style={styles.actionButton}
+                          onClick={() => visualizarDocumento(documento)}
+                        >
+                          <FaEye style={styles.icon} /> Visualizar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p style={styles.emptyMessage}>Nenhum documento não assinado encontrado.</p>
+          )}
+        </Tab>
+      </Tabs>
 
-                    <Button style={styles.actionButton}
-                      onClick={async () => {
-                        alert(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
-                        gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
-                        setNeedsUpdate(true);
-                      }}>
-
-                      <FaPen style={styles.icon} /> Assinar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p style={styles.emptyMessage}>Nenhum documento não assinado encontrado.</p>
-      )}
+      <DocumentoModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        documento={documentoSelecionado}
+      />
     </div>
   );
 }
@@ -165,7 +194,15 @@ const styles = {
     marginLeft: '270px',
     minHeight: '100vh',
     fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
-    fontFamily: "Poppins"
+    fontFamily: "Poppins",
+  },
+  header: {
+    backgroundColor: "rgb(227, 242, 253)",
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 2,
+    borderRadius: 20,
+    textAlign: 'center',
   },
   tableContainer: {
     overflowX: 'auto',
@@ -189,18 +226,11 @@ const styles = {
   tableRow: {
     borderBottom: '1px solid #bdc3c7',
   },
-
-  th: {
-    padding: '12px',
-    backgroundColor: '#3498db',
-    color: '#fff',
-    textAlign: 'left',
-  },
-  td: {
-    padding: '12px',
-    textAlign: 'left',
-    fontSize: '1rem',
-    color: '#34495e',
+  textoDocumento: {
+    maxWidth: '100px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   status: {
     padding: '4px 8px',
@@ -215,7 +245,6 @@ const styles = {
     padding: '5px 10px',
     fontSize: '14px',
     border: 'none',
-    // margin: '0 5px',
     justifyContent: 'center',
     alignItems: 'center',
   },

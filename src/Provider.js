@@ -48,22 +48,44 @@ export const AppProvider = ({ children }) => {
 
     const cadastrarUsuario = async (nome, email, senha) => {
         try {
+            const { data: nomeExistente } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('nome_usuario', nome)
+                .single();
+    
+            if (nomeExistente) {
+                return { error: 'Nome de usuário já está em uso. Escolha outro.' };
+            }
+    
+            const { data: emailExistente } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('email', email)
+                .single();
+    
+            if (emailExistente) {
+                return { error: 'E-mail já está em uso. Escolha outro.' };
+            }
+    
             const hashedPassword = await hashPassword(senha);
             const { data, error } = await supabase
                 .from('usuarios')
                 .insert([{ nome_usuario: nome, email: email, senha: hashedPassword }]);
-
+    
             if (error) {
                 console.error('Erro ao cadastrar o usuário:', error.message || error);
                 return { error: 'Erro ao cadastrar o usuário. Tente novamente.' };
             }
-
+    
             return { success: 'Usuário cadastrado com sucesso!' };
         } catch (error) {
             console.error('Erro no processo de cadastro:', error.message || error);
             return { error: 'Erro no processo de cadastro. Tente novamente.' };
         }
     };
+    
+    
 
     const login = async (email, password) => {
         try {
@@ -72,27 +94,35 @@ export const AppProvider = ({ children }) => {
                 .select('id_usuario, nome_usuario, senha')
                 .eq('email', email)
                 .single();
-
+    
             if (fetchError || !usuario) {
+                localStorage.removeItem('usuarioLogado');
                 return { error: 'Usuário não encontrado.' };
             }
-
+    
             const isPasswordCorrect = bcrypt.compareSync(password, usuario.senha);
-
+    
             if (!isPasswordCorrect) {
                 return { error: 'Senha incorreta.' };
             }
-
+    
             setUsuarioLogado(usuario);
             salvarUsuarioNoLocalStorage(usuario);
-
+    
             return { success: true, usuario };
         } catch (error) {
             console.error('Erro durante o login:', error.message || error);
+            localStorage.removeItem('usuarioLogado');
             return { error: 'Erro durante o login. Tente novamente.' };
         }
     };
-
+    
+    const logout = () => {
+        setUsuarioLogado(null);
+        localStorage.removeItem('usuarioLogado');
+      };
+    
+      
     const gerarAssinatura = async (idDocumento, idUsuario, text) => {
         try {
             const hash = await gerarHash(text);
@@ -188,7 +218,7 @@ export const AppProvider = ({ children }) => {
         try {
             const { data, error } = await supabase
                 .from('assinaturas')
-                .select('*, documentos (*)')
+                .select('*, documentos(*), usuarios(nome_usuario)')
                 .eq('id_usuario', idUsuario);
 
             if (error) {
@@ -207,7 +237,7 @@ export const AppProvider = ({ children }) => {
         try {
             const { data: documentos, error: erroDocumentos } = await supabase
                 .from('documentos')
-                .select('*')
+                .select('*, usuarios(nome_usuario)')
                 .eq('id_usuario', idUsuario);
 
             if (erroDocumentos) {
@@ -224,10 +254,11 @@ export const AppProvider = ({ children }) => {
                 console.error("Erro ao buscar assinaturas:", erroAssinaturas);
                 return [];
             }
-
-            const idDocumentoAssinaturas = assinaturas.map(doc => doc.id_documento);
-            const documentosNaoAssinados = documentos.filter(doc => !idDocumentoAssinaturas.includes(doc.id_documento));
-
+    
+            const idDocumentosAssinados = assinaturas.map(assinatura => assinatura.id_documento);
+    
+            const documentosNaoAssinados = documentos.filter(doc => !idDocumentosAssinados.includes(doc.id_documento));
+    
             return documentosNaoAssinados;
         } catch (error) {
             console.error('Erro ao listar documentos não assinados:', error.message || error);
@@ -364,7 +395,7 @@ export const AppProvider = ({ children }) => {
         try {
             const { data, error } = await supabase
                 .from('assinaturas')
-                .select('*, usuarios(*), documentos (*)')
+                .select('*, usuarios(nome_usuario), documentos (*)');
 
             if (error) {
                 console.error("Erro ao buscar documentos assinados:", error);
@@ -381,19 +412,16 @@ export const AppProvider = ({ children }) => {
         try {
             const { data: documentos, error: erroDocumentos } = await supabase
                 .from('documentos')
-                .select('*,  usuarios(*)')
-
-
+                .select('id_documento, mensagem_documento, criado_em, usuarios (nome_usuario)');     
             if (erroDocumentos) {
                 console.error("Erro ao buscar documentos:", erroDocumentos);
                 return [];
             }
-
+    
             const { data: assinaturas, error: erroAssinaturas } = await supabase
-            .from('assinaturas')
-            .select('*');
-
-
+                .from('assinaturas')
+                .select('id_documento');
+            
             if (erroAssinaturas) {
                 console.error("Erro ao buscar assinaturas:", erroAssinaturas);
                 return [];
@@ -403,7 +431,6 @@ export const AppProvider = ({ children }) => {
 
             const idDocumentoAssinaturas = assinaturas.map(doc => doc.id_documento);
             const documentosNaoAssinados = documentos.filter(doc => !idDocumentoAssinaturas.includes(doc.id_documento));
-            console.log(documentosNaoAssinados)
             return documentosNaoAssinados;
         } catch (error) {
             console.error('Erro ao listar documentos não assinados:', error.message || error);
@@ -426,7 +453,8 @@ export const AppProvider = ({ children }) => {
             listarDocumentosAssinados,
             listarDocumentosNaoAssinados,
             listarTodosDocumentosAssinados,
-            listarTodosDocumentosNaoAssinados
+            listarTodosDocumentosNaoAssinados,
+            logout
         }}>
             {children}
         </AppContext.Provider>

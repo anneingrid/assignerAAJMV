@@ -1,13 +1,18 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../Provider';
-import { FaFileSignature, FaPen, FaEye } from 'react-icons/fa';
-import { Button } from 'react-bootstrap';
+import { FaFileAlt, FaFileSignature, FaEye } from 'react-icons/fa';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { Button, Tab, Tabs } from 'react-bootstrap';
+import DocumentoModal from './DocumentoModal'; // Importa o novo componente de modal
 
 function Documentos() {
   const { usuarioLogado, listarTodosDocumentosAssinados, listarTodosDocumentosNaoAssinados, verificarAssinatura } = useContext(AppContext);
-  const [todosDocumentosAssinados, setListarTodosDocumentosAssinados] = useState([]);
-  const [todosDocumentosNaoAssinados, setListarTodosDocumentosNaoAssinados] = useState([]);
+  const [todosDocumentosAssinados, setTodosDocumentosAssinados] = useState([]);
+  const [todosDocumentosNaoAssinados, setTodosDocumentosNaoAssinados] = useState([]);
   const [needsUpdate, setNeedsUpdate] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [documentoSelecionado, setDocumentoSelecionado] = useState(null);
 
   useEffect(() => {
     if (usuarioLogado) {
@@ -15,131 +20,172 @@ function Documentos() {
         const assinados = await listarTodosDocumentosAssinados();
         const naoAssinados = await listarTodosDocumentosNaoAssinados();
 
-        setListarTodosDocumentosAssinados(assinados);
-        setListarTodosDocumentosNaoAssinados(naoAssinados);
+        setTodosDocumentosAssinados(assinados);
+        setTodosDocumentosNaoAssinados(naoAssinados);
         setNeedsUpdate(false);
       }
 
       fetchDocumentos();
-
     }
-  }, [usuarioLogado, todosDocumentosNaoAssinados, todosDocumentosAssinados]);
+  }, [usuarioLogado, needsUpdate]);
 
   const handleEmptyField = (field) => {
     return field && field.trim() !== '' ? field : 'Campo vazio';
   };
 
+  const showSuccessMessage = (message) => {
+    toast.success(message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  };
+
+  const showErrorMessage = (message) => {
+    toast.error(message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  };
+
+  const verificarAssinaturaDocumento = async (documento) => {
+    try {
+      const isValid = await verificarAssinatura(documento.id_documento, usuarioLogado.id_usuario);
+      if (isValid) {
+        showSuccessMessage("Assinatura válida!");
+      } else {
+        showErrorMessage("Assinatura inválida!");
+      }
+    } catch (error) {
+      showErrorMessage("Erro ao verificar a assinatura.");
+    }
+  };
+
+  const visualizarDocumento = (documento) => {
+    setDocumentoSelecionado(documento);
+    setShowModal(true);
+  };
+
   return (
     <div style={styles.container}>
-     <h1 style={{backgroundColor:"rgb(227, 242, 253)", 
-        paddingTop:10, 
-        paddingBottom:10, 
-        paddingLeft:2, 
-        borderRadius:20,
-        textAlign:'center'
-        }}>Todos os documentos</h1>
-      <h2 style={styles.title}>Assinados</h2>
-      {todosDocumentosAssinados.length > 0 ? (
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>Texto do Documento</th>
-                <th >Assinado em</th>
-                <th>Status</th>
-                <th>Proprietário</th>
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {todosDocumentosAssinados.map((documento) => (
+      <h1 style={styles.header}>Todos os documentos</h1>
+      <Tabs defaultActiveKey="assinados" id="documentos-tabs">
+        <Tab eventKey="assinados" title="Assinados">
+          <h2 style={styles.title}>Assinados</h2>
+          {todosDocumentosAssinados.length > 0 ? (
+            <div style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Texto do Documento</th>
+                    <th>Assinado em</th>
+                    <th>Status</th>
+                    <th>Proprietário</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {todosDocumentosAssinados.map((documento) => (
+                    <tr key={documento.id_documento} style={styles.tableRow}>
+                      <td style={styles.textoDocumento}>
+                        <FaFileAlt style={styles.documentIcon} />
+                        {handleEmptyField(documento.documentos.mensagem_documento)}
+                      </td>
+                      <td>{new Date(documento.assinado_em).toLocaleString()}</td>
+                      <td>
+                        <span style={{ ...styles.status, backgroundColor: '#A5D6A7' }}>Assinado</span>
+                      </td>
+                      <td>{documento.usuarios.nome_usuario}</td>
+                      <td>
+                        <Button
+                          style={styles.actionButton}
+                          onClick={() => verificarAssinaturaDocumento(documento)}
+                        >
+                          <FaFileSignature style={styles.icon} /> Verificar Assinatura
+                        </Button>
+                        <Button
+                          style={styles.actionButton}
+                          onClick={() => visualizarDocumento(documento)}
+                        >
+                          <FaEye style={styles.icon} /> Visualizar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p style={styles.emptyMessage}>Nenhum documento assinado encontrado.</p>
+          )}
+        </Tab>
 
-                <tr key={documento.id_documento} style={styles.tableRow}>
-                  <td style={{
-                    maxWidth: '100px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>{handleEmptyField(documento.documentos.mensagem_documento)}</td>
-                  <td style={{
-                    maxWidth: '130px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>{new Date(documento.assinado_em).toLocaleString()}</td>
-                  <td>
-                    <span style={{ ...styles.status, backgroundColor: '#A5D6A7' }}>Assinado</span>
-                  </td>
-                  <td>{documento.usuarios.nome_usuario}</td>
-                  <td>
-                    <Button
-                      style={styles.actionButton}
-                      onClick={async () => {
-                        const isValid = await verificarAssinatura(documento.id_documento, usuarioLogado.id_usuario);
-                        setNeedsUpdate(true);
-                        if (isValid) {
-                          alert("Assinatura válida!");
-                        } else {
-                          alert("Assinatura inválida!");
-                        }
-                      }}
-                    >
-                      <FaFileSignature style={styles.icon} /> Verificar Assinatura
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p style={styles.emptyMessage}>Nenhum documento assinado encontrado.</p>
-      )}
+        <Tab eventKey="nao-assinados" title="Não Assinados">
+          <h2 style={styles.title}>Não Assinados</h2>
+          {todosDocumentosNaoAssinados.length > 0 ? (
+            <div style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Texto do Documento</th>
+                    <th>Data de criação</th>
+                    <th>Status</th>
+                    <th>Proprietário</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {todosDocumentosNaoAssinados.map((documento) => (
+                    <tr key={documento.id_documento} style={styles.tableRow}>
+                      <td style={styles.textoDocumento}>
+                        <FaFileAlt style={styles.documentIcon} />
+                        {handleEmptyField(documento.mensagem_documento)}
+                      </td>
+                      <td>{new Date(documento.criado_em).toLocaleString()}</td>
+                      <td>
+                        <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
+                      </td>
+                      <td>{documento.usuarios.nome_usuario}</td>
+                      <td>
+                        <Button
+                          style={styles.actionButton}
+                          onClick={() => visualizarDocumento(documento)}
+                        >
+                          <FaEye style={styles.icon} /> Visualizar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p style={styles.emptyMessage}>Nenhum documento não assinado encontrado.</p>
+          )}
+        </Tab>
+      </Tabs>
 
-      <h2 style={styles.title}>Não Assinados</h2>
-      {todosDocumentosNaoAssinados.length > 0 ? (
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th >Texto do Documento</th>
-                <th>Data de criação</th>
-                <th>Status</th>
-                <th>Proprietário</th>
-                
-              </tr>
-            </thead>
-            <tbody>
-              {todosDocumentosNaoAssinados.map((documento) => (
-                <tr key={documento.id_documento} style={styles.tableRow}>
-                  <td style={{
-                    maxWidth: '100px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>{handleEmptyField(documento.mensagem_documento)}</td>
-                  <td style={{
-                    maxWidth: '130px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>{new Date(documento.criado_em).toLocaleString()}</td>
-                  <td>
-                    <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
-                  </td>
-                  <td>{documento.usuarios.nome_usuario}</td>
-                  
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p style={styles.emptyMessage}>Nenhum documento não assinado encontrado.</p>
-      )}
+      <DocumentoModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        documento={documentoSelecionado}
+      />
+
+      <ToastContainer />
     </div>
   );
 }
+
+
 
 const styles = {
   container: {
@@ -151,7 +197,19 @@ const styles = {
     marginLeft: '270px',
     minHeight: '100vh',
     fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
-    fontFamily: "Poppins"
+    fontFamily: "Poppins",
+  },
+  documentIcon: {
+    marginRight: '8px',  
+    color: '#3498db',    
+  },
+  header: {
+    backgroundColor: "rgb(227, 242, 253)",
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 2,
+    borderRadius: 20,
+    textAlign: 'center',
   },
   tableContainer: {
     overflowX: 'auto',
@@ -174,21 +232,15 @@ const styles = {
   },
   tableRow: {
     borderBottom: '1px solid #bdc3c7',
-    marginBottom: '40px'
+    marginBottom: '40px',
+    height: '50px', 
   },
-
-  th: {
-    padding: '12px',
-    backgroundColor: '#3498db',
-    color: '#fff',
-    textAlign: 'left',
-  },
-  td: {
-    padding: '12px',
-    textAlign: 'left',
-    fontSize: '1rem',
-    color: '#34495e',
-    
+  textoDocumento: {
+    maxWidth: '100px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    padding: '10px',
   },
   status: {
     padding: '4px 8px',
@@ -196,7 +248,6 @@ const styles = {
     color: '#fff',
     fontSize: '14px',
     alignItems: 'center',
-
   },
   actionButton: {
     backgroundColor: '#81D4FA',
@@ -204,7 +255,6 @@ const styles = {
     padding: '5px 10px',
     fontSize: '14px',
     border: 'none',
-    // margin: '0 5px',
     justifyContent: 'center',
     alignItems: 'center',
   },
