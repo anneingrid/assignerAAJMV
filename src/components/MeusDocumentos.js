@@ -106,10 +106,11 @@ function MeusDocumentos() {
                           onClick={async () => {
                             try {
                               const isValid = await verificarAssinatura(documento.id_documento, usuarioLogado.id_usuario);
+                              console.log(isValid)
                               if (isValid) {
-                                showSuccessMessage("Assinatura válida!");
+                                alert("Assinatura válida!");
                               } else {
-                                showErrorMessage("Assinatura inválida!");
+                                alert("Assinatura inválida!");
                               }
                             } catch (error) {
                               showErrorMessage("Erro ao verificar a assinatura.");
