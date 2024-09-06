@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../Provider';
 import GerarChaves from '../components/GerarChaves';
 import Assinar from '../components/Assinar';
@@ -8,9 +9,10 @@ import Navbar from '../components/Navbar';
 import Documentos from '../components/Documentos';
 
 function Dashboard() {
-  const { usuarioLogado } = useContext(AppContext);
+  const { usuarioLogado, logout } = useContext(AppContext);
   const [showNavbar, setShowNavbar] = useState(true);
   const [activeScreen, setActiveScreen] = useState('GerarChaves'); 
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -19,6 +21,11 @@ function Dashboard() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const renderActiveScreen = () => {
     switch (activeScreen) {
@@ -38,7 +45,7 @@ function Dashboard() {
   return (
     <div>
       <Navbar visible={showNavbar} />
-      <Menu setActiveScreen={setActiveScreen} />
+      <Menu setActiveScreen={setActiveScreen} handleLogout={handleLogout} />
       <div style={{backgroundColor: '#E3F2FD', margin: '0', padding: '0'}}>
         {renderActiveScreen()} 
       </div> 

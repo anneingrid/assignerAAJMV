@@ -1,8 +1,8 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
+import { FaFileAlt, FaSignOutAlt, FaKey, FaUser } from 'react-icons/fa'; 
 import { AppContext } from '../Provider';
-import { FaHome, FaFileAlt, FaSignOutAlt, FaKey, FaUser } from 'react-icons/fa'; 
 
-function Menu({ setActiveScreen }) {
+function Menu({ setActiveScreen, handleLogout }) {
   const { usuarioLogado } = useContext(AppContext);
   
   const getFirstAndLastName = (nomeCompleto) => {
@@ -32,7 +32,7 @@ function Menu({ setActiveScreen }) {
           </a>
         </li>
 
-        <li style={styles.sidebarItem}>
+        <li style={styles.sidebarItem} onClick={handleLogout}>
           <a href="#logout" style={styles.sidebarLink}>
             <FaSignOutAlt style={styles.icon} /> Sair
           </a>
@@ -40,16 +40,16 @@ function Menu({ setActiveScreen }) {
       </ul>
 
       <div style={styles.userInfo}>
-          <img
-            src="/avatar.png" 
-            alt="Avatar"
-            style={styles.avatar}
-          />
-          <h3 style={styles.userName}>
-            {usuarioLogado ? getFirstAndLastName(usuarioLogado.nome_usuario) : 'Usuário'}
-          </h3>
-          <span style={styles.userRole}>Admin</span>
-        </div>
+        <img
+          src="/avatar.png" 
+          alt="Avatar"
+          style={styles.avatar}
+        />
+        <h3 style={styles.userName}>
+          {usuarioLogado ? getFirstAndLastName(usuarioLogado.nome_usuario) : 'Usuário'}
+        </h3>
+        <span style={styles.userRole}>Admin</span>
+      </div>
     </div>
   );
 }
@@ -110,7 +110,6 @@ const styles = {
   icon: {
     marginRight: '10px',
   },
-
 };
 
 export default Menu;

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { AppContext } from './Provider';
 import Login from './pages/Login';
 import Cadastro from './pages/Cadastro';
 import Principal from './pages/Principal';
@@ -14,7 +15,12 @@ import { ToastContainer } from 'react-toastify';
 
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { usuarioLogado, logout } = useContext(AppContext);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!usuarioLogado);
+
+  useEffect(() => {
+    setIsAuthenticated(!!usuarioLogado);
+  }, [usuarioLogado]);
 
   return (
     <Router>
