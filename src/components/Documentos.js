@@ -7,27 +7,30 @@ import { Button, Tab, Tabs } from 'react-bootstrap';
 import DocumentoModal from './DocumentoModal'; // Importa o novo componente de modal
 
 function Documentos() {
-  const { usuarioLogado, listarTodosDocumentosAssinados, listarTodosDocumentosNaoAssinados, verificarAssinatura } = useContext(AppContext);
+  const { usuarioLogado, listarTodosDocumentosAssinados, listarTodosDocumentosNaoAssinados, verificarAssinatura, gerarAssinatura } = useContext(AppContext);
   const [todosDocumentosAssinados, setTodosDocumentosAssinados] = useState([]);
   const [todosDocumentosNaoAssinados, setTodosDocumentosNaoAssinados] = useState([]);
-  const [needsUpdate, setNeedsUpdate] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [documentoSelecionado, setDocumentoSelecionado] = useState(null);
 
+  // Função para buscar os documentos atualizados
+  const fetchDocumentos = async () => {
+    try {
+      const assinados = await listarTodosDocumentosAssinados(usuarioLogado.id_usuario);
+      const naoAssinados = await listarTodosDocumentosNaoAssinados(usuarioLogado.id_usuario);
+
+      setTodosDocumentosAssinados(assinados);
+      setTodosDocumentosNaoAssinados(naoAssinados);
+    } catch (error) {
+      console.error("Erro ao buscar os documentos:", error);
+    }
+  };
+
   useEffect(() => {
     if (usuarioLogado) {
-      async function fetchDocumentos() {
-        const assinados = await listarTodosDocumentosAssinados();
-        const naoAssinados = await listarTodosDocumentosNaoAssinados();
-
-        setTodosDocumentosAssinados(assinados);
-        setTodosDocumentosNaoAssinados(naoAssinados);
-        setNeedsUpdate(false);
-      }
-
       fetchDocumentos();
     }
-  }, [usuarioLogado, needsUpdate]);
+  }, [usuarioLogado, todosDocumentosAssinados,todosDocumentosNaoAssinados]);
 
   const handleEmptyField = (field) => {
     return field && field.trim() !== '' ? field : 'Campo vazio';
@@ -75,6 +78,19 @@ function Documentos() {
     setShowModal(true);
   };
 
+  const handleAssinarDocumento = async (documento) => {
+    try {
+      // Chama a função de assinatura
+      await gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
+      showSuccessMessage(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
+
+      // Após assinar, atualiza a listagem de documentos
+      await fetchDocumentos();
+    } catch (error) {
+      showErrorMessage("Erro ao assinar o documento.");
+    }
+  };
+
   return (
     <div style={styles.container}>
       <h1 style={styles.header}>Todos os documentos</h1>
@@ -98,7 +114,7 @@ function Documentos() {
                     <tr key={documento.id_documento} style={styles.tableRow}>
                       <td style={styles.textoDocumento}>
                         <FaFileAlt style={styles.documentIcon} />
-                        {handleEmptyField(documento.documentos.mensagem_documento)}
+                        {handleEmptyField(documento.mensagem_documento || documento.documentos?.mensagem_documento)}
                       </td>
                       <td>{new Date(documento.assinado_em).toLocaleString()}</td>
                       <td>
@@ -156,6 +172,13 @@ function Documentos() {
                       </td>
                       <td>{documento.usuarios.nome_usuario}</td>
                       <td>
+                        {/* Se o documento não for assinado, renderiza o botão de assinar */}
+                        <Button
+                          style={styles.actionButton}
+                          onClick={() => handleAssinarDocumento(documento)}
+                        >
+                          <FaFileSignature style={styles.icon} /> Assinar
+                        </Button>
                         <Button
                           style={styles.actionButton}
                           onClick={() => visualizarDocumento(documento)}
@@ -184,8 +207,6 @@ function Documentos() {
     </div>
   );
 }
-
-
 
 const styles = {
   container: {

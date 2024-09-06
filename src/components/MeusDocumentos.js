@@ -10,6 +10,7 @@ function MeusDocumentos() {
   const { usuarioLogado, listarDocumentosAssinados, listarDocumentosNaoAssinados, verificarAssinatura, gerarAssinatura } = useContext(AppContext);
   const [documentosAssinados, setDocumentosAssinados] = useState([]);
   const [documentosNaoAssinados, setDocumentosNaoAssinados] = useState([]);
+  const [documentosAssinadosIds, setDocumentosAssinadosIds] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [documentoSelecionado, setDocumentoSelecionado] = useState(null);
 
@@ -58,6 +59,18 @@ function MeusDocumentos() {
   const visualizarDocumento = (documento) => {
     setDocumentoSelecionado(documento);
     setShowModal(true);
+  };
+
+  const handleAssinarDocumento = async (documento) => {
+    try {
+      await gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
+      showSuccessMessage(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
+      
+      // Adiciona o ID do documento assinado no estado
+      setDocumentosAssinadosIds((prev) => [...prev, documento.id_documento]);
+    } catch (error) {
+      showErrorMessage("Erro ao assinar o documento.");
+    }
   };
 
   return (
@@ -144,19 +157,14 @@ function MeusDocumentos() {
                         <span style={{ ...styles.status, backgroundColor: '#e74c3c' }}>Pendente</span>
                       </td>
                       <td style={{ alignItems: 'center' }}>
-                        <Button
-                          style={styles.actionButton}
-                          onClick={async () => {
-                            try {
-                              await gerarAssinatura(documento.id_documento, usuarioLogado.id_usuario, documento.mensagem_documento);
-                              showSuccessMessage(`Documento assinado com sucesso!\nTexto do documento: ${documento.mensagem_documento}`);
-                            } catch (error) {
-                              showErrorMessage("Erro ao assinar o documento.");
-                            }
-                          }}
-                        >
-                          <FaPen style={styles.icon} /> Assinar
-                        </Button>
+                        {!documentosAssinadosIds.includes(documento.id_documento) && (
+                          <Button
+                            style={styles.actionButton}
+                            onClick={() => handleAssinarDocumento(documento)}
+                          >
+                            <FaPen style={styles.icon} /> Assinar
+                          </Button>
+                        )}
                         <Button
                           style={styles.actionButton}
                           onClick={() => visualizarDocumento(documento)}
